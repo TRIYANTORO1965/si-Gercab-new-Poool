@@ -1,0 +1,52 @@
+/* 🌿 Background hijau lembut dengan ornamen */
+body {
+  background: linear-gradient(to right, #e6f4ea, #fefbe9);
+  background-image: url('/daun.png');
+  background-size: contain;
+  background-repeat: repeat;
+  font-family: 'Inter', sans-serif;
+  }
+  
+  /* Glassmorphism style untuk konten utama */
+  .bg-glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+  }
+  
+  /* Header yang sejuk dan identitas kuat */
+  header {
+    background-color: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    padding: 1rem;
+    border-bottom: 1px solid #d1fae5;
+  }
+  
+  /* Custom scrollbar untuk tampilan lebih halus */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #a7f3d0;
+    border-radius: 4px;
+  }
+  
+  /* Button hijau dan pink khas GERCAB-GO */
+  .btn-green {
+    @apply bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition;
+  }
+  .btn-pink {
+    @apply bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition;
+  }
+  
+body {
+  background: linear-gradient(to right, #e6f4ea, #fefbe9);
+  background-image: url('/daun.png');
+  background-size: 300px;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  font-family: 'Inter', sans-serif;
+  }
+  

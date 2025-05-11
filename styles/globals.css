@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset dasar */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  background-color: #f7fdfb;
+}
+
+/* Kartu transparan kaca */
+.bg-glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  max-width: 100%;
+}
+
+/* Tombol */
+.btn-green {
+  @apply bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition;
+}
+
+.btn-yellow {
+  @apply bg-yellow-400 text-black px-4 py-2 rounded-md hover:bg-yellow-500 transition;
+}
+
+.btn-red {
+  @apply bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition;
+}
+
+/* Layout kontainer */
+.container-center {
+  @apply w-full max-w-md mx-auto px-4 py-6;
+}
