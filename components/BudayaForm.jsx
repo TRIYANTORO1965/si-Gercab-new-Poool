@@ -23,7 +23,6 @@ const aksiBudaya = {
     { aksi: "Proyek Penelitian Budaya Lokal", poin: 7 },
     { aksi: "Dokumentasi Budaya", poin: 5 },
   ],
-  // other categories...
 };
 
 export default function BudayaForm() {
@@ -39,7 +38,6 @@ export default function BudayaForm() {
   const [data, setData] = useState([]);
   const [totalPoin, setTotalPoin] = useState(0);
 
-  // Fetching data from Firestore on component mount
   useEffect(() => {
     const fetchData = async () => {
       const querySnapshot = await getDocs(collection(db, "budayaHijau"));
@@ -64,10 +62,7 @@ export default function BudayaForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Save data to Firestore
     await addDoc(collection(db, "budayaHijau"), form);
-    
-    // Update state after saving
     const updated = [...data, form];
     setData(updated);
     setTotalPoin(totalPoin + form.poin);
@@ -137,7 +132,9 @@ export default function BudayaForm() {
       {data.length > 0 && (
         <div className="mt-8 overflow-x-auto">
           <h3 className="text-lg font-semibold text-pink-700 mb-2">Grafik Poin Budaya</h3>
-          <Bar data={chart} />
+          <div className="min-w-[350px] max-w-full">
+            <Bar data={chart} />
+          </div>
         </div>
       )}
     </div>
