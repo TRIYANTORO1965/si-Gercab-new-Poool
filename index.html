@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beranda</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="script/dashboard.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-RXf+QSDCUQs6b4BdvnN2fS9cMzrDgN+Tf5fF5IqZ5gC3CgUHRRC+xAkI1KbcIuT1tcvVMEZGxXkwU9EivCtw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+  <ul class="nav">
+    <li><a href="index.html" class="active"><i class="fas fa-home"></i> Beranda</a></li>
+    <li><a href="#"><i class="fas fa-shoe-prints"></i> Jejak Aksi</a></li>
+    <li><a href="#"><i class="fas fa-leaf"></i> Budaya Lokal</a></li>
+    <li><a href="#"><i class="fas fa-exclamation-triangle"></i> Lapor Aksi</a></li>
+    <li><a href="#"><i class="fas fa-calendar-alt"></i> Agenda</a></li>
+    <li><a href="#"><i class="fas fa-image"></i> Galeri</a></li>
+    <li><a href="#"><i class="fas fa-chart-line"></i> Rekap Poin</a></li>
+    <li><a href="#" id="logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+  </ul>
+
+  <div class="content">
+    <h1><i class="fas fa-tachometer-alt"></i> Dashboard Rekap Kegiatan</h1>
+    <div class="rekap-container">
+      <div class="rekap-card">
+        <i class="fas fa-shoe-prints"></i>
+        <h3>Jejak</h3>
+        <p><span id="totalJejak">0</span> Kegiatan</p>
+      </div>
+      <div class="rekap-card">
+        <i class="fas fa-spa"></i>
+        <h3>Budaya</h3>
+        <p><span id="totalBudaya">0</span> Kegiatan</p>
+      </div>
+      <div class="rekap-card">
+        <i class="fas fa-bullhorn"></i>
+        <h3>Lapor</h3>
+        <p><span id="totalLapor">0</span> Laporan</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

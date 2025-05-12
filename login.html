@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    integrity="sha512-RXf+QSDCUQs6b4BdvnN2fS9cMzrDgN+Tf5fF5IqZ5gC3CgUHRRC+xAkI1KbcIuT1tcvVMEZGxXkwU9EivCtw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background-color: #f2f2f2;
+      text-align: center;
+    }
+    input {
+      padding: 10px;
+      margin: 10px 0;
+      width: 250px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: darkgreen;
+    }
+  </style>
+</head>
+<body>
+  <h2><i class="fas fa-leaf"></i> Login ke si-GERCAB</h2>
+  <input type="email" id="email" placeholder="Email"><br>
+  <input type="password" id="password" placeholder="Password"><br>
+  <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</button>
+
+  <script type="module">
+    import { auth } from './script/firebase.js';
+    import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js';
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const pass = document.getElementById('password').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        window.location.href = "index.html";
+      } catch (err) {
+        alert("Login gagal: " + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

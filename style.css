@@ -1,0 +1,62 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #e6f4ea;
+}
+
+.nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: #2d6a4f;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.nav li {
+  flex: 1 1 auto;
+}
+
+.nav a {
+  display: block;
+  padding: 15px;
+  text-decoration: none;
+  color: white;
+  text-align: center;
+  font-weight: bold;
+}
+
+.nav a:hover,
+.nav a.active {
+  background-color: #40916c;
+}
+
+.content {
+  padding: 20px;
+}
+
+.rekap-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.rekap-card {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 20px;
+  width: 200px;
+  text-align: center;
+}
+
+.rekap-card i {
+  font-size: 30px;
+  color: #2d6a4f;
+}
+
+.rekap-card h3 {
+  margin: 10px 0;
+  color: #1b4332;
+}
