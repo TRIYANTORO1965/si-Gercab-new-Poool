@@ -1,117 +1,79 @@
 import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { db } from "../lib/firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function Galeri() {
   const [media, setMedia] = useState([]);
-  const [form, setForm] = useState({
-    nama: "",
-    kelas: "",
-    deskripsi: "",
-    file: null,
-    tanggal: new Date().toISOString().slice(0, 10),
-    poin: 5,
-  });
   const [totalPoin, setTotalPoin] = useState(0);
+
+  // Contoh dokumentasi jika Firestore kosong
+  const contoh = [
+    {
+      nama: "Lestari",
+      kelas: "7A",
+      deskripsi: "Menanam pohon di taman sekolah untuk menjaga udara tetap bersih.",
+      tanggal: "2025-05-10",
+      poin: 10,
+    },
+    {
+      nama: "Budi",
+      kelas: "8B",
+      deskripsi: "Menampilkan tari tradisional Jawa saat Hari Budaya Nasional.",
+      tanggal: "2025-05-08",
+      poin: 7,
+    },
+    {
+      nama: "Sari",
+      kelas: "9C",
+      deskripsi: "Bersama teman-teman membersihkan sungai di sekitar sekolah.",
+      tanggal: "2025-05-01",
+      poin: 8,
+    },
+    {
+      nama: "Ayu",
+      kelas: "7C",
+      deskripsi: "Membuat kerajinan tangan dari barang bekas plastik.",
+      tanggal: "2025-04-25",
+      poin: 6,
+    },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       const snapshot = await getDocs(collection(db, "galeriMedia"));
       const docs = snapshot.docs.map(doc => doc.data());
-      setMedia(docs);
-      const total = docs.reduce((sum, item) => sum + (item.poin || 0), 0);
+      const allData = docs.length > 0 ? docs : contoh; // fallback
+      setMedia(allData);
+      const total = allData.reduce((sum, item) => sum + (item.poin || 0), 0);
       setTotalPoin(total);
     };
     fetchData();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.file) return;
-
-    const newItem = { ...form };
-    try {
-      await addDoc(collection(db, "galeriMedia"), newItem);
-      setMedia(prev => [...prev, newItem]);
-      setTotalPoin(prev => prev + form.poin);
-      setForm({
-        nama: "",
-        kelas: "",
-        deskripsi: "",
-        file: null,
-        tanggal: new Date().toISOString().slice(0, 10),
-        poin: 5,
-      });
-    } catch (err) {
-      console.error("Gagal menyimpan ke Firestore:", err);
-    }
-  };
-
   return (
     <MainLayout>
-      <div className="bg-glass p-4 md:p-6">
-        <h2 className="text-xl font-semibold text-green-600 mb-4">Dokumentasi Lingkungan & Budaya</h2>
-        <form onSubmit={handleSubmit} className="grid gap-4 mb-6">
-          <input
-            name="nama"
-            value={form.nama}
-            onChange={handleChange}
-            placeholder="Nama Siswa"
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            name="kelas"
-            value={form.kelas}
-            onChange={handleChange}
-            placeholder="Kelas"
-            className="border p-2 rounded"
-            required
-          />
-          <input
-            name="deskripsi"
-            value={form.deskripsi}
-            onChange={handleChange}
-            placeholder="Deskripsi / Judul Dokumentasi"
-            className="border p-2 rounded"
-            required
-          />
-          
-        </form>
+      <div className="bg-white p-4 md:p-8 max-w-5xl mx-auto">
+        <h2 className="text-2xl font-bold text-green-700 mb-4 text-center">
+          🌿 Galeri Cinta Lingkungan & Budaya
+        </h2>
 
-        <p className="text-sm text-green-700 font-semibold mb-6">
-          Total Poin Dokumentasi: <span className="text-green-900">{totalPoin}</span>
+        <p className="text-center text-green-800 font-medium mb-8">
+          Total Poin Dokumentasi: <span className="font-bold">{totalPoin}</span>
         </p>
 
         {media.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {media.map((item, i) => (
-              <div key={i} className="border rounded shadow p-2 bg-white">
-                <p className="text-sm font-semibold text-pink-700">{item.deskripsi}</p>
-                <p className="text-xs text-gray-500">📅 {item.tanggal} | ⭐ {item.poin} poin</p>
-                <p className="text-xs text-gray-500">👤 {item.nama} ({item.kelas})</p>
-                {item.file?.startsWith("http") || item.file?.startsWith("data:") ? (
-                  item.file.includes("video") ? (
-                    <video controls className="w-full rounded mt-2">
-                      <source src={item.file} />
-                    </video>
-                  ) : (
-                    <img src={item.file} alt="galeri" className="w-full h-48 object-cover rounded mt-2" />
-                  )
-                ) : (
-                  <p className="text-xs text-red-400 mt-2">Media tidak tersedia</p>
-                )}
+              <div key={i} className="border border-green-200 rounded-lg p-4 bg-green-50 hover:bg-green-100 transition">
+                <h3 className="text-lg font-semibold text-green-800">{item.deskripsi}</h3>
+                <p className="text-sm text-gray-600 mt-1">👤 {item.nama} ({item.kelas})</p>
+                <p className="text-sm text-gray-500">📅 {item.tanggal} | ⭐ {item.poin} poin</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-blue-500">Belum ada dokumentasi yang diunggah.</p>
+          <p className="text-center text-blue-600 text-sm">Belum ada dokumentasi yang tersedia.</p>
         )}
       </div>
     </MainLayout>

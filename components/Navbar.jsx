@@ -12,8 +12,10 @@ export default function Navbar() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setRole(localStorage.getItem("role"));
-      setNama(localStorage.getItem("nama"));
+      const storedRole = localStorage.getItem("role");
+      const storedNama = localStorage.getItem("nama");
+      setRole(storedRole);
+      setNama(storedNama);
       setIsMounted(true);
     }
   }, []);

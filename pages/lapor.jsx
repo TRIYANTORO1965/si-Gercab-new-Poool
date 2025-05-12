@@ -152,56 +152,69 @@ export default function Lapor() {
 
   return (
     <MainLayout>
-      <div className="bg-glass p-4">
-        <h2 className="text-xl font-semibold mb-4 text-green-700">Form Laporan Lingkungan</h2>
+      <div className="bg-white p-4 rounded shadow max-w-6xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6 text-center text-green-700">Form Laporan Lingkungan</h2>
         <form onSubmit={handleSubmit} className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-            {["nama", "kelas", "lokasi", "hari", "tanggal", "waktu", "laporan", "solusi"].map((field) => (
-              <input
-                key={field}
-                name={field}
-                value={form[field]}
-                onChange={handleChange}
-                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                className="border p-2 rounded"
-                type={field === "tanggal" ? "date" : field === "waktu" ? "time" : "text"}
-                required
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { name: "nama", label: "Nama" },
+              { name: "kelas", label: "Kelas" },
+              { name: "lokasi", label: "Lokasi" },
+              { name: "hari", label: "Hari" },
+              { name: "tanggal", label: "Tanggal", type: "date" },
+              { name: "waktu", label: "Waktu", type: "time" },
+              { name: "laporan", label: "Laporan" },
+              { name: "solusi", label: "Solusi" }
+            ].map(({ name, label, type }) => (
+              <div key={name} className="flex flex-col">
+                <label htmlFor={name} className="text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <input
+                  id={name}
+                  name={name}
+                  value={form[name]}
+                  onChange={handleChange}
+                  type={type || "text"}
+                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                />
+              </div>
             ))}
           </div>
 
-          <label className="flex items-center gap-2">
-            <input type="checkbox" name="tindaklanjut" checked={form.tindaklanjut} onChange={handleChange} />
+          <label className="flex items-center gap-2 mt-4">
+            <input type="checkbox" name="tindaklanjut" checked={form.tindaklanjut} onChange={handleChange} className="accent-green-600" />
             Sudah ditindaklanjuti / diatasi? (+5 poin)
           </label>
 
-          <button type="submit" className="bg-green-600 text-white py-2 rounded hover:bg-pink-700">
-            Kirim Laporan
-          </button>
+          <button type="submit" className="mt-4 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Kirim Laporan</button>
         </form>
 
         {data.length > 0 && (
           <>
-            <div className="flex gap-4 mt-6 justify-center">
+            <div className="flex flex-col md:flex-row gap-4 mt-6 justify-center">
               <button onClick={exportExcel} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export Excel</button>
               <button onClick={exportPDF} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Export PDF</button>
             </div>
+
             <div className="mt-8">
-              <h3 className="text-lg font-semibold text-green-700 mb-2">Laporan Masuk:</h3>
-              <ul className="space-y-4 text-sm">
+              <h3 className="text-xl font-semibold text-green-700 mb-4">Laporan Masuk:</h3>
+              <ul className="space-y-4">
                 {data.map((item, i) => (
-                  <li key={i} className="bg-green-50 border p-3 rounded shadow">
-                    <p><strong>{item.nama} ({item.kelas})</strong> - <em>{item.lokasi}</em></p>
-                    <p><span className="font-semibold">Waktu:</span> {item.hari}, {item.tanggal} - {item.waktu}</p>
-                    <p><span className="font-semibold">Laporan:</span> {item.laporan}</p>
-                    <p><span className="font-semibold">Solusi:</span> {item.solusi}</p>
-                    {item.tindaklanjut && <p className="text-green-700 font-medium">✅ Sudah ditindaklanjuti (+5 poin)</p>}
-                    <p className="font-semibold">Poin: {item.poin}</p>
+                  <li key={i} className="bg-green-50 border border-green-100 p-4 rounded-lg shadow-sm">
+                    <div className="mb-2">
+                      <p><strong>{item.nama} ({item.kelas})</strong> - <em>{item.lokasi}</em></p>
+                      <p><span className="font-semibold">Waktu:</span> {item.hari}, {item.tanggal} - {item.waktu}</p>
+                      <p><span className="font-semibold">Laporan:</span> {item.laporan}</p>
+                      <p><span className="font-semibold">Solusi:</span> {item.solusi}</p>
+                      {item.tindaklanjut && <p className="text-green-700 font-medium">✅ Sudah ditindaklanjuti (+5 poin)</p>}
+                      <p className="font-semibold">Poin: {item.poin}</p>
+                    </div>
+
                     {item.penilaian ? (
-                      <div className="mt-2 text-sm bg-green-100 p-2 rounded">
+                      <div className="bg-green-100 p-3 rounded">
                         <p><strong>Nilai:</strong> {item.totalNilai} / 20</p>
                         <p><strong>Predikat:</strong> {item.predikat}</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1 text-xs">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-sm">
                           {Object.entries(item.penilaian).map(([aspek, nilai]) => (
                             <span key={aspek}><strong>{aspek}:</strong> {nilai}</span>
                           ))}
@@ -209,9 +222,9 @@ export default function Lapor() {
                       </div>
                     ) : (
                       isAdmin && (
-                        <div className="mt-2 bg-yellow-50 p-2 rounded">
-                          <p className="font-semibold">Beri Penilaian:</p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+                        <div className="bg-yellow-50 p-3 rounded mt-3">
+                          <p className="font-semibold mb-2">Beri Penilaian:</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {aspekPenilaian.map(aspek => (
                               <input
                                 key={aspek}

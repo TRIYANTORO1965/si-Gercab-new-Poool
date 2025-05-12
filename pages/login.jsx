@@ -2,18 +2,19 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../lib/firebase"; // Mengimpor auth dan db dari lib/firebase.js
+import { auth, db } from "../lib/firebase";
 import { getDoc, doc } from "firebase/firestore";
 
 export default function Login() {
   const router = useRouter();
   const [form, setForm] = useState({ nama: "", username: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const role = localStorage.getItem("role");
-    if (role) router.replace("/"); // Arahkan ke halaman utama jika sudah login
+    if (role) router.replace("/");
   }, [router]);
 
   const handleChange = (e) => {
@@ -23,18 +24,20 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { username, password } = form;
+    setLoading(true);
+    setError("");
 
     try {
-      // Autentikasi Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, username, password);
+      const { username, password } = form;
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        username.toLowerCase(),
+        password
+      );
       const user = userCredential.user;
-      console.log("UID yang login:", user.uid);
 
-      // Akses Firestore untuk data user
       let userDoc = await getDoc(doc(db, "user", user.uid));
-
-      // Jika tidak ada di koleksi "user", coba di koleksi "siswa"
       if (!userDoc.exists()) {
         userDoc = await getDoc(doc(db, "siswa", user.uid));
       }
@@ -45,19 +48,25 @@ export default function Login() {
 
       const data = userDoc.data();
       const role = data.role || "siswa";
-      const nama = data.nama || form.nama;
+      const finalNama =
+        data.nama && data.nama.trim() !== "" ? data.nama : form.nama;
 
-      // Menyimpan data ke localStorage
       localStorage.setItem("role", role);
-      localStorage.setItem("nama", nama);
-      localStorage.setItem("loginUser", JSON.stringify({ nama, role }));
+      localStorage.setItem("nama", finalNama);
+      localStorage.setItem(
+        "loginUser",
+        JSON.stringify({ nama: finalNama, role })
+      );
 
-      // Arahkan ke halaman utama
-      router.replace("/");
-
+      // ✅ Delay agar localStorage tersimpan sebelum redirect
+      setTimeout(() => {
+        router.replace("/");
+      }, 300);
     } catch (err) {
-      console.error("Firebase login error:", err);
+      console.error("Login error:", err);
       setError("Login gagal. Periksa kembali email dan password.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,8 +85,18 @@ export default function Login() {
             />
           </div>
           <h2 className="text-2xl font-bold text-green-700 flex items-end gap-1">
-            <span className="text-red-600 italic text-xl align-super" style={{ fontFamily: "Georgia, serif" }}>Si</span>
-            <span style={{ fontFamily: "'Playfair Display', serif" }} className="tracking-widest">GERCAB</span>
+            <span
+              className="text-red-600 italic text-xl align-super"
+              style={{ fontFamily: "Georgia, serif" }}
+            >
+              Si
+            </span>
+            <span
+              style={{ fontFamily: "'Playfair Display', serif" }}
+              className="tracking-widest"
+            >
+              GERCAB
+            </span>
           </h2>
         </div>
 
@@ -120,8 +139,12 @@ export default function Login() {
               {showPassword ? "🙈" : "👁️"}
             </button>
           </div>
-          <button type="submit" className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition text-sm">
-            Login
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-green-600 text-white py-2 rounded hover:bg-green-700 transition text-sm"
+          >
+            {loading ? "Memproses..." : "Login"}
           </button>
         </form>
       </div>

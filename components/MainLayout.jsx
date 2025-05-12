@@ -1,5 +1,6 @@
 import Header from "./Header";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 
 export default function MainLayout({ children }) {
   return (
@@ -8,6 +9,7 @@ export default function MainLayout({ children }) {
         <Header />
         <Navbar />
         <div className="mt-4">{children}</div>
+        <Footer />
       </div>
     </div>
   );

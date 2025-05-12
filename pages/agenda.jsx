@@ -3,6 +3,59 @@ import MainLayout from "../components/MainLayout";
 import { db } from "../lib/firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
+const seedAgenda = [
+  {
+    judul: "Penanaman Pohon Bersama",
+    tanggal: "2025-06-05",
+    deskripsi: "Kegiatan menanam 100 bibit pohon di area sekolah dalam rangka Hari Lingkungan Hidup Sedunia."
+  },
+  {
+    judul: "Aksi Bersih Sungai",
+    tanggal: "2025-06-10",
+    deskripsi: "Siswa dan warga membersihkan bantaran sungai dari sampah plastik dan limbah rumah tangga."
+  },
+  {
+    judul: "Kampanye Bebas Plastik",
+    tanggal: "2025-06-15",
+    deskripsi: "Edukasi kepada siswa dan guru untuk membawa botol minum sendiri dan mengurangi penggunaan plastik sekali pakai."
+  },
+  {
+    judul: "Workshop Daur Ulang",
+    tanggal: "2025-06-20",
+    deskripsi: "Pelatihan membuat kerajinan dari barang bekas seperti botol plastik, kardus, dan kertas."
+  },
+  {
+    judul: "Hari Tanpa Kendaraan",
+    tanggal: "2025-06-25",
+    deskripsi: "Mengajak siswa dan guru berangkat ke sekolah tanpa kendaraan bermotor untuk mengurangi emisi karbon."
+  },
+  {
+    judul: "Pentas Seni Daerah",
+    tanggal: "2025-07-01",
+    deskripsi: "Penampilan tari tradisional dan musik daerah oleh siswa kelas 7 dan 8."
+  },
+  {
+    judul: "Lomba Membatik",
+    tanggal: "2025-07-05",
+    deskripsi: "Kompetisi membatik tingkat sekolah dengan juri dari pengrajin lokal."
+  },
+  {
+    judul: "Festival Makanan Tradisional",
+    tanggal: "2025-07-10",
+    deskripsi: "Siswa membawa makanan khas daerah masing-masing dan mengenalkannya ke teman-teman."
+  },
+  {
+    judul: "Kelas Bahasa Daerah",
+    tanggal: "2025-07-15",
+    deskripsi: "Belajar kosakata dasar dan lagu anak-anak dalam bahasa Jawa, Sunda, dan lainnya."
+  },
+  {
+    judul: "Pameran Budaya Lokal",
+    tanggal: "2025-07-20",
+    deskripsi: "Pameran pakaian adat, alat musik tradisional, dan miniatur rumah adat oleh siswa."
+  }
+];
+
 export default function Agenda() {
   const [agendaList, setAgendaList] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -12,14 +65,19 @@ export default function Agenda() {
   const [editIndex, setEditIndex] = useState(null);
   const [user, setUser] = useState(null);
 
-  // Ambil data agenda dari Firestore
   useEffect(() => {
     const fetchAgenda = async () => {
       const querySnapshot = await getDocs(collection(db, "agenda"));
       const agendaData = querySnapshot.docs.map((doc) => doc.data());
-      setAgendaList(agendaData);
+      if (agendaData.length === 0) {
+        for (const item of seedAgenda) {
+          await addDoc(collection(db, "agenda"), item);
+        }
+        setAgendaList(seedAgenda);
+      } else {
+        setAgendaList(agendaData);
+      }
     };
-
     fetchAgenda();
     const login = JSON.parse(localStorage.getItem("loginUser"));
     setUser(login);
@@ -27,34 +85,19 @@ export default function Agenda() {
 
   useEffect(() => {
     let data = [...agendaList];
-    if (bulan) {
-      data = data.filter((item) => new Date(item.tanggal).getMonth() + 1 === parseInt(bulan));
-    }
-    if (tahun) {
-      data = data.filter((item) => new Date(item.tanggal).getFullYear() === parseInt(tahun));
-    }
+    if (bulan) data = data.filter((item) => new Date(item.tanggal).getMonth() + 1 === parseInt(bulan));
+    if (tahun) data = data.filter((item) => new Date(item.tanggal).getFullYear() === parseInt(tahun));
     setFiltered(data);
   }, [bulan, tahun, agendaList]);
 
   const semuaTahun = [...new Set(agendaList.map((a) => new Date(a.tanggal).getFullYear()))];
 
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleFormChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const agendaRef = collection(db, "agenda");
-    if (editIndex !== null) {
-      // Mengupdate data agenda yang sudah ada di Firestore
-      await addDoc(agendaRef, form);
-    } else {
-      // Menambahkan agenda baru
-      await addDoc(agendaRef, form);
-    }
-
-    // Reset form dan index edit
+    await addDoc(agendaRef, form);
     setForm({ tanggal: "", judul: "", deskripsi: "" });
     setEditIndex(null);
   };
@@ -67,23 +110,18 @@ export default function Agenda() {
 
   const handleDelete = async (i) => {
     if (confirm("Yakin ingin menghapus agenda ini?")) {
-      // Hapus data agenda dari Firestore
-      await addDoc(collection(db, "agenda"), agendaList[i]);
       const updated = agendaList.filter((_, index) => index !== i);
       setAgendaList(updated);
     }
   };
 
-  const formatTanggal = (tgl) => {
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(tgl).toLocaleDateString("id-ID", options);
-  };
+  const formatTanggal = (tgl) => new Date(tgl).toLocaleDateString("id-ID", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
+  });
 
   const getBulanTahunSekarang = () => {
     const now = new Date();
-    const namaBulan = now.toLocaleString("id-ID", { month: "long" });
-    const tahunSekarang = now.getFullYear();
-    return `${namaBulan} ${tahunSekarang}`;
+    return `${now.toLocaleString("id-ID", { month: "long" })} ${now.getFullYear()}`;
   };
 
   const renderKalender = () => {
@@ -92,12 +130,12 @@ export default function Agenda() {
     const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
 
     return (
-      <div className="grid grid-cols-7 gap-2 text-center text-sm mb-6">
+      <div className="grid grid-cols-7 gap-1 text-center text-sm mb-6">
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
           const isAgenda = highlightDates.includes(day);
           return (
-            <div key={i} className={`p-2 rounded ${isAgenda ? "bg-yellow-300 text-white font-bold" : "bg-gray-100"}`}>
+            <div key={i} className={`p-2 rounded-md ${isAgenda ? "bg-emerald-400 text-white font-semibold shadow" : "bg-gray-100"}`}>
               {day}
             </div>
           );
@@ -108,63 +146,50 @@ export default function Agenda() {
 
   return (
     <MainLayout>
-      <div className="bg-glass">
-        <h2 className="text-xl font-semibold mb-6 text-green-700">📅 Agenda Kegiatan Lingkungan dan Budaya</h2>
+      <div className="bg-white/80 backdrop-blur-md p-4 md:p-8 rounded-lg shadow-inner">
+        <h2 className="text-2xl font-bold mb-6 text-green-700 text-center">
+          📅 Agenda Kegiatan Lingkungan dan Budaya
+        </h2>
 
-        {/* Kalender interaktif */}
+        {/* Kalender */}
         <div className="mb-8">
-          <h3 className="text-md font-semibold text-green-600 mb-2">🗓️ Kalender {getBulanTahunSekarang()}</h3>
+          <h3 className="text-lg font-semibold text-green-600 mb-3 text-center">
+            🗓️ Kalender {getBulanTahunSekarang()}
+          </h3>
           {renderKalender()}
         </div>
 
-        {/* Form Tambah/Edit Agenda */}
+        {/* Form Agenda */}
         {user?.role === "admin" && (
-          <form onSubmit={handleSubmit} className="space-y-3 mb-8">
+          <form onSubmit={handleSubmit} className="space-y-4 mb-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                name="judul"
-                value={form.judul}
-                onChange={handleFormChange}
-                className="border p-2 rounded"
-                placeholder="Judul Kegiatan"
-                required
-              />
-              <input
-                type="date"
-                name="tanggal"
-                value={form.tanggal}
-                onChange={handleFormChange}
-                className="border p-2 rounded"
-                required
-              />
-              <input
-                type="text"
-                name="deskripsi"
-                value={form.deskripsi}
-                onChange={handleFormChange}
-                className="border p-2 rounded col-span-2"
-                placeholder="Deskripsi Singkat"
-                required
-              />
+              <input type="text" name="judul" value={form.judul} onChange={handleFormChange}
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                placeholder="Judul Kegiatan" required />
+              <input type="date" name="tanggal" value={form.tanggal} onChange={handleFormChange}
+                className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                required />
+              <textarea name="deskripsi" value={form.deskripsi} onChange={handleFormChange}
+                className="md:col-span-2 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                placeholder="Deskripsi Singkat" rows={3} required />
             </div>
-            <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700">
+            <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
               {editIndex !== null ? "💾 Simpan Perubahan" : "➕ Tambah Agenda"}
             </button>
           </form>
         )}
 
         {/* Filter */}
-        <div className="flex gap-2 mb-6">
-          <select onChange={(e) => setBulan(e.target.value)} value={bulan} className="border p-2 rounded">
+        <div className="flex flex-wrap gap-4 mb-6 justify-start">
+          <select onChange={(e) => setBulan(e.target.value)} value={bulan}
+            className="p-2 rounded-lg border bg-white shadow-sm hover:ring-2 hover:ring-green-300">
             <option value="">🌙 Semua Bulan</option>
             {Array.from({ length: 12 }, (_, i) => (
-              <option key={i} value={i + 1}>
-                {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
-              </option>
+              <option key={i} value={i + 1}>{new Date(0, i).toLocaleString("id-ID", { month: "long" })}</option>
             ))}
           </select>
-          <select onChange={(e) => setTahun(e.target.value)} value={tahun} className="border p-2 rounded">
+          <select onChange={(e) => setTahun(e.target.value)} value={tahun}
+            className="p-2 rounded-lg border bg-white shadow-sm hover:ring-2 hover:ring-green-300">
             <option value="">📅 Semua Tahun</option>
             {semuaTahun.map((th) => (
               <option key={th} value={th}>{th}</option>
@@ -172,24 +197,26 @@ export default function Agenda() {
           </select>
         </div>
 
-        {/* List Agenda */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Agenda Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.length > 0 ? (
             filtered.map((agenda, i) => (
-              <div key={i} className="bg-white border border-green-100 shadow-lg rounded-lg p-4 hover:shadow-xl transition">
-                <p className="text-xs text-gray-500">{formatTanggal(agenda.tanggal)}</p>
-                <h3 className="text-lg font-bold text-green-800 mb-2">{agenda.judul}</h3>
-                <p className="text-sm text-gray-700">{agenda.deskripsi}</p>
+              <div key={i} className="bg-white border rounded-xl p-4 shadow-md hover:shadow-lg transition">
+                <p className="text-xs text-gray-400">{formatTanggal(agenda.tanggal)}</p>
+                <h3 className="text-lg font-semibold text-emerald-700 mt-1 mb-2">{agenda.judul}</h3>
+                <p className="text-sm text-gray-600">{agenda.deskripsi}</p>
                 {user?.role === "admin" && (
                   <div className="flex justify-end gap-2 mt-4">
-                    <button onClick={() => handleEdit(i)} className="bg-blue-500 text-white text-xs px-3 py-1 rounded hover:bg-blue-600">Edit</button>
-                    <button onClick={() => handleDelete(i)} className="bg-red-500 text-white text-xs px-3 py-1 rounded hover:bg-red-600">Hapus</button>
+                    <button onClick={() => handleEdit(i)}
+                      className="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
+                    <button onClick={() => handleDelete(i)}
+                      className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">Hapus</button>
                   </div>
                 )}
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-600">Tidak ada agenda untuk filter yang dipilih.</p>
+            <p className="text-sm text-gray-500 col-span-full">Tidak ada agenda untuk filter yang dipilih.</p>
           )}
         </div>
       </div>

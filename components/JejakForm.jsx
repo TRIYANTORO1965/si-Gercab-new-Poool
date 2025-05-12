@@ -7,6 +7,7 @@ import { Bar } from "react-chartjs-2";
 import "chart.js/auto";
 import { getDocs, collection, addDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { ChevronDown } from "lucide-react";
 
 const aksiData = {
   "Pengurangan Sampah": [
@@ -142,7 +143,7 @@ export default function JejakForm() {
         {
           label: `Poin per ${key}`,
           data: Object.values(map),
-          backgroundColor: "rgba(34,197,94,0.6)", // hijau muda
+          backgroundColor: "rgba(34,197,94,0.6)",
         },
       ],
     };
@@ -151,53 +152,39 @@ export default function JejakForm() {
   const totalPoin = data.reduce((t, d) => t + (d.poin || 0), 0);
 
   return (
-    <div className="bg-white p-6 sm:p-8 rounded-xl shadow-soft w-full max-w-2xl mx-auto animate-fade-in">
-      <form className="grid gap-4" onSubmit={handleSubmit}>
-        <input name="nama" value={form.nama} onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-2 w-full" placeholder="Nama" required />
-        <input name="kelas" value={form.kelas} onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-2 w-full" placeholder="Kelas" required />
-
-        <select name="kategori" value={form.kategori} onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-2 w-full" required>
-          <option value="">Pilih Kategori</option>
-          {Object.keys(aksiData).map((kat) => (
-            <option key={kat} value={kat}>{kat}</option>
-          ))}
-        </select>
-
-        {form.kategori && (
-          <select name="aksi" value={form.aksi} onChange={handleChange}
-            className="border border-gray-300 rounded-lg p-2 w-full" required>
-            <option value="">Pilih Aksi</option>
-            {aksiData[form.kategori].map((a) => (
-              <option key={a.aksi} value={a.aksi}>{a.aksi}</option>
+    <div className="bg-white p-6 sm:p-8 rounded-xl shadow-md w-full max-w-3xl mx-auto animate-fade-in">
+      <form className="grid grid-cols-1 sm:grid-cols-2 gap-4" onSubmit={handleSubmit}>
+        <input name="nama" value={form.nama} onChange={handleChange} placeholder="Nama" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <input name="kelas" value={form.kelas} onChange={handleChange} placeholder="Kelas" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <div className="relative">
+          <select name="kategori" value={form.kategori} onChange={handleChange} required className="appearance-none w-full px-4 py-2 border border-green-300 bg-green-50 text-green-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400">
+            <option value="">Pilih Kategori</option>
+            {Object.keys(aksiData).map((kat) => (
+              <option key={kat} value={kat}>{kat}</option>
             ))}
           </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600 pointer-events-none" />
+        </div>
+        {form.kategori && (
+          <div className="relative">
+            <select name="aksi" value={form.aksi} onChange={handleChange} required className="appearance-none w-full px-4 py-2 border border-blue-300 bg-blue-50 text-blue-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <option value="">Pilih Aksi</option>
+              {aksiData[form.kategori].map((a) => (
+                <option key={a.aksi} value={a.aksi}>{a.aksi}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-600 pointer-events-none" />
+          </div>
         )}
-
-        <input name="lokasi" value={form.lokasi} onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-2 w-full" placeholder="Lokasi" required />
-        <input name="tanggal" type="date" value={form.tanggal} onChange={handleChange}
-          className="border border-gray-300 rounded-lg p-2 w-full" required />
-        <input name="poin" type="number" value={form.poin} readOnly
-          className="border border-gray-300 rounded-lg p-2 w-full bg-gray-100" placeholder="Poin" />
-
-        <button type="submit"
-          className="bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition w-full">
-          Simpan Jejak
-        </button>
+        <input name="lokasi" value={form.lokasi} onChange={handleChange} placeholder="Lokasi" required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <input name="tanggal" type="date" value={form.tanggal} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <input name="poin" type="number" value={form.poin} readOnly placeholder="Poin" className="w-full px-4 py-2 border border-gray-300 bg-gray-100 rounded-lg" />
+        <button type="submit" className="col-span-1 sm:col-span-2 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition w-full">Simpan Jejak</button>
       </form>
 
       <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
-        <button onClick={exportExcel}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition">
-          Export ke Excel
-        </button>
-        <button onClick={exportPDF}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-          Export ke PDF
-        </button>
+        <button onClick={exportExcel} className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg transition">Export ke Excel</button>
+        <button onClick={exportPDF} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">Export ke PDF</button>
       </div>
 
       <p className="text-center text-sm mt-4 text-gray-700">
