@@ -74,8 +74,8 @@ export default function Navbar() {
                 Logout
               </button>
               <p className="text-xs text-blue-500 font-medium">
-                👤 login sebagai {nama}
-              </p>
+  👤 {role === "admin" ? "Admin" : "Siswa"}: {nama}
+</p>
             </>
           ) : (
             <Link href="/login">

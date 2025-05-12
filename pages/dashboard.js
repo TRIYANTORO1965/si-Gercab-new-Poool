@@ -5,7 +5,12 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { db } from "../lib/firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -67,8 +72,23 @@ export default function Dashboard() {
         detailMap[key].push(item);
       });
 
-      setRekap(Object.values(rekapMap).sort((a, b) => b.totalPoin - a.totalPoin));
+      const rekapArray = Object.values(rekapMap).sort(
+        (a, b) => b.totalPoin - a.totalPoin
+      );
+      setRekap(rekapArray);
       setDetailData(detailMap);
+
+      // 🔥 Simpan ke koleksi Firestore "rekapPoin"
+      const saveRekapPromises = rekapArray.map((item) => {
+        const docId = `${item.nama}-${item.kelas}`.replace(/\s+/g, "_");
+        return setDoc(doc(db, "rekapPoin", docId), {
+          ...item,
+          updatedAt: new Date(),
+        });
+      });
+
+      await Promise.all(saveRekapPromises);
+      console.log("✅ Rekap berhasil disimpan ke Firestore.");
     };
 
     fetchData();
@@ -93,9 +113,9 @@ export default function Dashboard() {
   };
 
   const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Rekap Poin Semua Aksi Siswa", 14, 16);
-    autoTable(doc, {
+    const docPDF = new jsPDF();
+    docPDF.text("Rekap Poin Semua Aksi Siswa", 14, 16);
+    autoTable(docPDF, {
       head: [["No", "Nama", "Kelas", "Jumlah Aksi", "Total Poin"]],
       body: rekap.map((item, i) => [
         i + 1,
@@ -106,7 +126,7 @@ export default function Dashboard() {
       ]),
       startY: 20,
     });
-    doc.save("rekap_poin_siswa.pdf");
+    docPDF.save("rekap_poin_siswa.pdf");
   };
 
   const filteredRekap = rekap.filter((item) => {
@@ -116,13 +136,17 @@ export default function Dashboard() {
   });
 
   return (
-<MainLayout>
+    <MainLayout>
       <div className="bg-white bg-opacity-70 backdrop-blur p-4 rounded shadow font-inter max-w-full overflow-x-auto text-sm sm:text-base">
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-indigo-700">Dashboard Rekap Semua Aksi Siswa</h2>
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-indigo-700">
+          Dashboard Rekap Semua Aksi Siswa
+        </h2>
 
         {rekap.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-2">🏆 Top 10 Siswa Berdasarkan Poin</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-2">
+              🏆 Top 10 Siswa Berdasarkan Poin
+            </h3>
             <div className="overflow-x-auto">
               <table className="min-w-[600px] w-full table-auto text-sm border bg-white shadow rounded">
                 <thead className="bg-yellow-100">
@@ -136,10 +160,14 @@ export default function Dashboard() {
                 <tbody>
                   {rekap.slice(0, 10).map((item, idx) => (
                     <tr key={idx} className="hover:bg-yellow-50">
-                      <td className="px-3 py-2 border text-center font-semibold">{idx + 1}</td>
+                      <td className="px-3 py-2 border text-center font-semibold">
+                        {idx + 1}
+                      </td>
                       <td className="px-3 py-2 border">{item.nama}</td>
                       <td className="px-3 py-2 border">{item.kelas}</td>
-                      <td className="px-3 py-2 border text-center">{item.totalPoin}</td>
+                      <td className="px-3 py-2 border text-center">
+                        {item.totalPoin}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -149,14 +177,30 @@ export default function Dashboard() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-          <input type="text" placeholder="🔍 Cari nama siswa..." className="border px-3 py-2 rounded w-full text-sm sm:text-base" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <select className="border px-3 py-2 rounded w-full text-sm sm:text-base" value={kelasFilter} onChange={(e) => setKelasFilter(e.target.value)}>
+          <input
+            type="text"
+            placeholder="🔍 Cari nama siswa..."
+            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <select
+            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
+            value={kelasFilter}
+            onChange={(e) => setKelasFilter(e.target.value)}
+          >
             <option value="">🎓 Semua Kelas</option>
             {Array.from(new Set(rekap.map((r) => r.kelas))).map((kelas, i) => (
-              <option key={i} value={kelas}>{kelas}</option>
+              <option key={i} value={kelas}>
+                {kelas}
+              </option>
             ))}
           </select>
-          <select className="border px-3 py-2 rounded w-full text-sm sm:text-base" value={kategoriFilter} onChange={(e) => setKategoriFilter(e.target.value)}>
+          <select
+            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
+            value={kategoriFilter}
+            onChange={(e) => setKategoriFilter(e.target.value)}
+          >
             <option value="">🗂️ Semua Kategori</option>
             <option value="Jejak">Jejak</option>
             <option value="Budaya">Budaya</option>
@@ -166,8 +210,18 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center items-center">
-          <button onClick={exportExcel} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full sm:w-auto">Export Excel</button>
-          <button onClick={exportPDF} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full sm:w-auto">Export PDF</button>
+          <button
+            onClick={exportExcel}
+            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full sm:w-auto"
+          >
+            Export Excel
+          </button>
+          <button
+            onClick={exportPDF}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full sm:w-auto"
+          >
+            Export PDF
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -186,18 +240,35 @@ export default function Dashboard() {
                 filteredRekap.map((item) => {
                   const key = item.nama + "-" + item.kelas;
                   const detailAksi = detailData[key] || [];
-                  const filteredDetail = kategoriFilter ? detailAksi.filter((a) => (a.kategori || "Laporan") === kategoriFilter) : detailAksi;
+                  const filteredDetail = kategoriFilter
+                    ? detailAksi.filter(
+                        (a) => (a.kategori || "Laporan") === kategoriFilter
+                      )
+                    : detailAksi;
 
                   return (
                     <React.Fragment key={key}>
                       <tr className="hover:bg-indigo-50">
                         <td className="px-3 py-2 border text-center">
-                          <button onClick={() => toggleExpand(key)} className={`px-2 py-1 rounded-full text-xs font-semibold transition duration-200 ${expanded === key ? "bg-red-100 text-red-600 hover:bg-red-200" : "bg-green-100 text-green-700 hover:bg-green-200"}`}>{expanded === key ? "⬇️" : "▶️"}</button>
+                          <button
+                            onClick={() => toggleExpand(key)}
+                            className={`px-2 py-1 rounded-full text-xs font-semibold transition duration-200 ${
+                              expanded === key
+                                ? "bg-red-100 text-red-600 hover:bg-red-200"
+                                : "bg-green-100 text-green-700 hover:bg-green-200"
+                            }`}
+                          >
+                            {expanded === key ? "⬇️" : "▶️"}
+                          </button>
                         </td>
                         <td className="px-3 py-2 border">{item.nama}</td>
                         <td className="px-3 py-2 border">{item.kelas}</td>
-                        <td className="px-3 py-2 border text-center">{item.jumlahAksi}</td>
-                        <td className="px-3 py-2 border text-center">{item.totalPoin}</td>
+                        <td className="px-3 py-2 border text-center">
+                          {item.jumlahAksi}
+                        </td>
+                        <td className="px-3 py-2 border text-center">
+                          {item.totalPoin}
+                        </td>
                       </tr>
                       {expanded === key && (
                         <tr>
@@ -216,15 +287,28 @@ export default function Dashboard() {
                                   {filteredDetail.length > 0 ? (
                                     filteredDetail.map((detail, index) => (
                                       <tr key={index}>
-                                        <td className="px-3 py-2 border">{detail.tanggal}</td>
-                                        <td className="px-3 py-2 border">{detail.kategori}</td>
-                                        <td className="px-3 py-2 border">{detail.aksi}</td>
-                                        <td className="px-3 py-2 border">{detail.poin}</td>
+                                        <td className="px-3 py-2 border">
+                                          {detail.tanggal}
+                                        </td>
+                                        <td className="px-3 py-2 border">
+                                          {detail.kategori}
+                                        </td>
+                                        <td className="px-3 py-2 border">
+                                          {detail.aksi}
+                                        </td>
+                                        <td className="px-3 py-2 border">
+                                          {detail.poin}
+                                        </td>
                                       </tr>
                                     ))
                                   ) : (
                                     <tr>
-                                      <td colSpan="4" className="px-3 py-2 text-center">Tidak ada detail</td>
+                                      <td
+                                        colSpan="4"
+                                        className="px-3 py-2 text-center"
+                                      >
+                                        Tidak ada detail
+                                      </td>
                                     </tr>
                                   )}
                                 </tbody>
@@ -238,7 +322,9 @@ export default function Dashboard() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" className="px-3 py-2 text-center">Tidak ada data yang cocok.</td>
+                  <td colSpan="5" className="px-3 py-2 text-center">
+                    Tidak ada data yang cocok.
+                  </td>
                 </tr>
               )}
             </tbody>

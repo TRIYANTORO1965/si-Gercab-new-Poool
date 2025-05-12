@@ -37,3 +37,4 @@ yarn-error.log*
 # Optional: ignore lock file (if using yarn or npm ci)
 # yarn.lock
 # package-lock.json
+.next
