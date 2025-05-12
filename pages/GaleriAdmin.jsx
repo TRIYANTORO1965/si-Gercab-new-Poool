@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { db } from "../lib/firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { useAuth } from "../lib/useAuth";
+import { useAuth } from "../lib/useAuth"; // pakai curly bracket karena ini named export
 
 export default function GaleriAdmin() {
   const { user } = useAuth();
@@ -17,12 +17,14 @@ export default function GaleriAdmin() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user && user.role === "admin") {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
     const snapshot = await getDocs(collection(db, "galeriMedia"));
-    const docs = snapshot.docs.map(doc => doc.data());
+    const docs = snapshot.docs.map((doc) => doc.data());
     setMedia(docs);
   };
 
@@ -52,7 +54,9 @@ export default function GaleriAdmin() {
     setLoading(false);
   };
 
-  if (!user || user.role !== "admin") {
+  if (!user) return null;
+
+  if (user.role !== "admin") {
     return (
       <MainLayout>
         <div className="p-6 text-center text-red-600 font-semibold">
