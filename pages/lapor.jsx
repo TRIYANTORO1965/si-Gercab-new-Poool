@@ -85,7 +85,41 @@ export default function Lapor() {
       "Sampah elektronik (kabel, baterai, dsb)": ["Kumpulkan di tempat khusus", "Buat program e-waste", "Lapor saja"],
       "Sisa makanan tercecer di kantin": ["Koordinasi dengan kantin", "Sediakan tempat sisa makanan", "Lapor saja"]
     },
-    // kategori lainnya...
+    "💧 Air & Sanitasi": {
+      "Kran air bocor": ["Tutup sementara", "Lapor saja"],
+      "Toilet/WC kotor atau mampet": ["Bersihkan", "Lapor saja"],
+      "Genangan air di halaman atau lorong": ["Pasang peringatan", "Lapor saja"],
+      "Wastafel rusak atau tersumbat": ["Gunakan wastafel lain", "Lapor saja"],
+      "Sabun cuci tangan tidak tersedia": ["Sediakan sabun", "Lapor saja"]
+    },
+    "🌬️ Udara & Bau": {
+      "Bau tidak sedap dari toilet/saluran": ["Gunakan pengharum", "Lapor saja"],
+      "Ruangan pengap/ventilasi buruk": ["Buka jendela", "Pasang kipas/ventilasi", "Lapor saja"],
+      "Asap pembakaran dari luar sekolah": ["Lapor saja"]
+    },
+    "🌿 Tanaman & Area Hijau": {
+      "Tanaman layu atau mati": ["Menyiram", "Ganti tanaman baru", "Lapor saja"],
+      "Taman tidak terawat": ["Kerja bakti", "Koordinasi dengan OSIS", "Lapor saja"],
+      "Tanah/lapangan gersang dan berdebu": ["Penanaman rumput", "Pengairan area", "Lapor saja"],
+      "Tidak ada pohon rindang di area panas": ["Pengajuan penanaman", "Lapor saja"]
+    },
+    "🧱 Fasilitas Lingkungan Rusak": {
+      "Jalan/ubin halaman rusak": ["Pasang tanda peringatan", "Lapor saja"],
+      "Coretan di tembok (vandalisme)": ["Bersihkan tembok", "Sosialisasi anti vandalisme", "Lapor saja"],
+      "Pot bunga/pagar taman rusak": ["Perbaiki", "Ajukan penggantian", "Lapor saja"],
+      "Tempat duduk kotor atau rusak": ["Bersihkan", "Lapor saja"]
+    },
+    "🔌 Energi & Listrik": {
+      "Lampu menyala saat tidak digunakan": ["Matikan lampu", "Pasang reminder hemat energi", "Lapor saja"],
+      "AC/kipas menyala terus": ["Matikan bila tidak digunakan", "Tingkatkan kesadaran", "Lapor saja"],
+      "Tidak ada kontrol pemakaian listrik di ruang kosong": ["Pasang sensor otomatis", "Lapor saja"]
+    },
+    "⚠️ Perilaku Tidak Ramah Lingkungan": {
+      "Siswa membuang sampah sembarangan": ["Tegur siswa", "Adakan kampanye kebersihan", "Lapor saja"],
+      "Tidak melaksanakan piket kelas": ["Evaluasi piket", "Buat sistem penjadwalan ulang", "Lapor saja"],
+      "Merusak tanaman atau fasilitas lingkungan": ["Beri sanksi", "Sosialisasi cinta lingkungan", "Lapor saja"],
+      "Tidak peduli kebersihan ruang kelas": ["Adakan lomba kelas bersih", "Sosialisasi tanggung jawab", "Lapor saja"]
+    }
   };
 
   const getSkor = (kategori, aksi) => aksiSkor[aksi] || 2;
