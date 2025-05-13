@@ -14,9 +14,9 @@ export default function Jejak() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-yellow-50 py-6 px-4">
-        <div className="w-full max-w-2xl sm:max-w-xl xs:max-w-sm mx-auto bg-glass rounded-xl p-6 shadow-soft animate-fade-in">
-          <h2 className="text-2xl font-bold text-green-700 mb-4 text-center">
+      <div className="min-h-screen bg-gray-50 py-10 px-4">
+        <div className="max-w-3xl mx-auto bg-white rounded-3xl p-8 shadow-xl">
+          <h2 className="text-3xl font-bold text-green-800 mb-6 text-center">
             Form Jejak Hijau
           </h2>
 

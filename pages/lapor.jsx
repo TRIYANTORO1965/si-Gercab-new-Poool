@@ -1,54 +1,159 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import MainLayout from "../components/MainLayout";
+import { db, auth } from "../lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { db, auth } from "../lib/firebase";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { collection, addDoc, getDocs, doc, updateDoc } from "firebase/firestore";
 
 export default function Lapor() {
   const [user] = useAuthState(auth);
-  const isAdmin = user?.uid === "wTKVnPz0hGcjJ6yu9UFGmw70i3i2";
 
   const [form, setForm] = useState({
     nama: "",
     kelas: "",
-    lokasi: "",
-    hari: "",
     tanggal: "",
-    waktu: "",
-    laporan: "",
-    solusi: "",
-    tindaklanjut: false,
-    poin: 0
+    lokasi: "",
+    kategori: "",
+    jenis: "",
+    aksi: "",
+    nilai: "",
+    saran: ""
   });
 
-  const [data, setData] = useState([]);
-  const [penilaian, setPenilaian] = useState({});
-  const aspekPenilaian = ["kejelasan", "relevansi", "bukti", "dampak"];
+  const [jenisOptions, setJenisOptions] = useState([]);
+  const [aksiOptions, setAksiOptions] = useState([]);
+  const [customJenis, setCustomJenis] = useState("");
+  const [customAksi, setCustomAksi] = useState("");
+  const [skorPoin, setSkorPoin] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const querySnapshot = await getDocs(collection(db, "laporanLingkungan"));
-      const laporanData = querySnapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: doc.id,
-        docRef: doc.id
-      }));
-      setData(laporanData);
-    };
-    fetchData();
-  }, []);
+  const aksiSkor = {
+    "Menyapu": 5,
+    "Mengumpulkan dan membuang": 5,
+    "Ganti tempat sampah": 5,
+    "Sosialisasi pemilahan": 4,
+    "Pasang label": 3,
+    "Bersihkan got": 5,
+    "Koordinasi dengan petugas sekolah": 4,
+    "Kumpulkan di tempat khusus": 4,
+    "Buat program e-waste": 5,
+    "Koordinasi dengan kantin": 3,
+    "Sediakan tempat sisa makanan": 3,
+    "Tutup sementara": 2,
+    "Bersihkan": 4,
+    "Pasang peringatan": 2,
+    "Gunakan wastafel lain": 2,
+    "Sediakan sabun": 3,
+    "Gunakan pengharum": 2,
+    "Buka jendela": 2,
+    "Pasang kipas/ventilasi": 4,
+    "Menyiram": 3,
+    "Ganti tanaman baru": 4,
+    "Kerja bakti": 5,
+    "Koordinasi dengan OSIS": 4,
+    "Penanaman rumput": 4,
+    "Pengairan area": 3,
+    "Pengajuan penanaman": 3,
+    "Pasang tanda peringatan": 2,
+    "Bersihkan tembok": 3,
+    "Sosialisasi anti vandalisme": 4,
+    "Perbaiki": 3,
+    "Ajukan penggantian": 3,
+    "Matikan lampu": 2,
+    "Pasang reminder hemat energi": 3,
+    "Matikan bila tidak digunakan": 2,
+    "Tingkatkan kesadaran": 3,
+    "Pasang sensor otomatis": 4,
+    "Tegur siswa": 2,
+    "Adakan kampanye kebersihan": 4,
+    "Evaluasi piket": 3,
+    "Buat sistem penjadwalan ulang": 3,
+    "Beri sanksi": 2,
+    "Sosialisasi cinta lingkungan": 4,
+    "Adakan lomba kelas bersih": 4,
+    "Sosialisasi tanggung jawab": 3,
+    "Lapor saja": 1
+  };
+
+  const kategoriMasalah = {
+    "🗑️ Sampah & Kebersihan": {
+      "Sampah berserakan di kelas/halaman": ["Menyapu", "Mengumpulkan dan membuang", "Lapor saja"],
+      "Tempat sampah penuh atau rusak": ["Ganti tempat sampah", "Lapor saja"],
+      "Tidak ada pemilahan sampah organik/anorganik": ["Sosialisasi pemilahan", "Pasang label", "Lapor saja"],
+      "Sampah menumpuk di got/saluran air": ["Bersihkan got", "Koordinasi dengan petugas sekolah", "Lapor saja"],
+      "Sampah elektronik (kabel, baterai, dsb)": ["Kumpulkan di tempat khusus", "Buat program e-waste", "Lapor saja"],
+      "Sisa makanan tercecer di kantin": ["Koordinasi dengan kantin", "Sediakan tempat sisa makanan", "Lapor saja"]
+    },
+    "💧 Air & Sanitasi": {
+      "Kran air bocor": ["Tutup sementara", "Lapor saja"],
+      "Toilet/WC kotor atau mampet": ["Bersihkan", "Lapor saja"],
+      "Genangan air di halaman atau lorong": ["Pasang peringatan", "Lapor saja"],
+      "Wastafel rusak atau tersumbat": ["Gunakan wastafel lain", "Lapor saja"],
+      "Sabun cuci tangan tidak tersedia": ["Sediakan sabun", "Lapor saja"]
+    },
+    "🌬️ Udara & Bau": {
+      "Bau tidak sedap dari toilet/saluran": ["Gunakan pengharum", "Lapor saja"],
+      "Ruangan pengap/ventilasi buruk": ["Buka jendela", "Pasang kipas/ventilasi", "Lapor saja"],
+      "Asap pembakaran dari luar sekolah": ["Lapor saja"]
+    },
+    "🌿 Tanaman & Area Hijau": {
+      "Tanaman layu atau mati": ["Menyiram", "Ganti tanaman baru", "Lapor saja"],
+      "Taman tidak terawat": ["Kerja bakti", "Koordinasi dengan OSIS", "Lapor saja"],
+      "Tanah/lapangan gersang dan berdebu": ["Penanaman rumput", "Pengairan area", "Lapor saja"],
+      "Tidak ada pohon rindang di area panas": ["Pengajuan penanaman", "Lapor saja"]
+    },
+    "🧱 Fasilitas Lingkungan Rusak": {
+      "Jalan/ubin halaman rusak": ["Pasang tanda peringatan", "Lapor saja"],
+      "Coretan di tembok (vandalisme)": ["Bersihkan tembok", "Sosialisasi anti vandalisme", "Lapor saja"],
+      "Pot bunga/pagar taman rusak": ["Perbaiki", "Ajukan penggantian", "Lapor saja"],
+      "Tempat duduk kotor atau rusak": ["Bersihkan", "Lapor saja"]
+    },
+    "🔌 Energi & Listrik": {
+      "Lampu menyala saat tidak digunakan": ["Matikan lampu", "Pasang reminder hemat energi", "Lapor saja"],
+      "AC/kipas menyala terus": ["Matikan bila tidak digunakan", "Tingkatkan kesadaran", "Lapor saja"],
+      "Tidak ada kontrol pemakaian listrik di ruang kosong": ["Pasang sensor otomatis", "Lapor saja"]
+    },
+    "⚠️ Perilaku Tidak Ramah Lingkungan": {
+      "Siswa membuang sampah sembarangan": ["Tegur siswa", "Adakan kampanye kebersihan", "Lapor saja"],
+      "Tidak melaksanakan piket kelas": ["Evaluasi piket", "Buat sistem penjadwalan ulang", "Lapor saja"],
+      "Merusak tanaman atau fasilitas lingkungan": ["Beri sanksi", "Sosialisasi cinta lingkungan", "Lapor saja"],
+      "Tidak peduli kebersihan ruang kelas": ["Adakan lomba kelas bersih", "Sosialisasi tanggung jawab", "Lapor saja"]
+    }
+  };
+
+  const getSkor = (kategori, aksi) => aksiSkor[aksi] || 2;
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === "checkbox") {
-      setForm((prev) => ({
-        ...prev,
-        tindaklanjut: checked,
-        poin: checked ? 5 : 0
-      }));
+    const { name, value } = e.target;
+    if (name === "kategori") {
+      const jenisMap = kategoriMasalah[value] || {};
+      setJenisOptions([...Object.keys(jenisMap), "Lainnya"]);
+      setAksiOptions([]);
+      setForm((prev) => ({ ...prev, kategori: value, jenis: "", aksi: "" }));
+      setSkorPoin(null);
+    } else if (name === "jenis") {
+      if (value === "Lainnya") {
+        setAksiOptions([]);
+        setCustomJenis("");
+        setForm((prev) => ({ ...prev, jenis: "", aksi: "" }));
+        setSkorPoin(null);
+      } else {
+        const aksiList = kategoriMasalah[form.kategori]?.[value] || [];
+        setAksiOptions([...aksiList, "Lainnya"]);
+        setForm((prev) => ({ ...prev, jenis: value, aksi: "" }));
+        setSkorPoin(null);
+      }
+    } else if (name === "aksi") {
+      if (value === "Lainnya") {
+        setCustomAksi("");
+        setForm((prev) => ({ ...prev, aksi: "" }));
+        setSkorPoin(null);
+      } else {
+        const skor = getSkor(form.kategori, value);
+        setForm((prev) => ({ ...prev, aksi: value, nilai: skor }));
+        setSkorPoin(skor);
+      }
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -56,204 +161,108 @@ export default function Lapor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await addDoc(collection(db, "laporanLingkungan"), form);
-      setData(prev => [...prev, form]);
-      setForm({
-        nama: "",
-        kelas: "",
-        lokasi: "",
-        hari: "",
-        tanggal: "",
-        waktu: "",
-        laporan: "",
-        solusi: "",
-        tindaklanjut: false,
-        poin: 0
-      });
-    } catch (error) {
-      console.error("Gagal simpan ke Firestore:", error);
+    const finalJenis = form.jenis || customJenis;
+    const finalAksi = form.aksi || customAksi;
+    const skor = getSkor(form.kategori, finalAksi);
+
+    if (parseInt(form.nilai) > 5) {
+      alert("Nilai maksimal adalah 5 poin.");
+      return;
     }
-  };
-
-  const handlePenilaianChange = (id, aspek, nilai) => {
-    setPenilaian(prev => ({
-      ...prev,
-      [id]: {
-        ...(prev[id] || {}),
-        [aspek]: parseInt(nilai)
-      }
-    }));
-  };
-
-  const simpanPenilaian = async (id, docRef) => {
-    const nilai = penilaian[id];
-    if (!nilai) return;
-
-    const total = aspekPenilaian.reduce((sum, aspek) => sum + (nilai[aspek] || 0), 0);
-    const predikat =
-      total >= 17 ? "Sangat Baik" :
-      total >= 13 ? "Baik" :
-      total >= 9 ? "Cukup" : "Kurang";
 
     try {
-      await updateDoc(doc(db, "laporanLingkungan", docRef), {
-        penilaian: nilai,
-        totalNilai: total,
-        predikat
+      await addDoc(collection(db, "laporanLingkungan"), {
+        ...form,
+        jenis: finalJenis,
+        aksi: finalAksi,
+        skor,
+        waktu: new Date()
       });
-      alert("Penilaian berhasil disimpan");
+      alert(`Laporan berhasil dikirim! Total poin: ${skor}`);
+      setForm({ nama: "", kelas: "", tanggal: "", lokasi: "", kategori: "", jenis: "", aksi: "", nilai: "", saran: "" });
+      setJenisOptions([]);
+      setAksiOptions([]);
+      setSkorPoin(null);
     } catch (err) {
-      console.error("Gagal simpan penilaian:", err);
+      alert("Gagal mengirim laporan");
     }
   };
 
-  const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      data.map((item) => ({
-        Nama: item.nama,
-        Kelas: item.kelas,
-        Lokasi: item.lokasi,
-        Hari: item.hari,
-        Tanggal: item.tanggal,
-        Waktu: item.waktu,
-        Laporan: item.laporan,
-        Solusi: item.solusi,
-        TindakLanjut: item.tindaklanjut ? "Sudah" : "Belum",
-        Poin: item.poin
-      }))
-    );
+  const exportExcel = async () => {
+    const snapshot = await getDocs(collection(db, "laporanLingkungan"));
+    const data = snapshot.docs.map(doc => doc.data());
+    const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan Lingkungan");
-    XLSX.writeFile(wb, "laporan_lingkungan.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan");
+    XLSX.writeFile(wb, "laporan.xlsx");
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.text("Laporan Lingkungan Sekolah", 14, 16);
-    autoTable(doc, {
-      head: [["Nama", "Kelas", "Lokasi", "Hari", "Tanggal", "Waktu", "Laporan", "Solusi", "Tindak Lanjut", "Poin"]],
-      body: data.map((item) => [
-        item.nama,
-        item.kelas,
-        item.lokasi,
-        item.hari,
-        item.tanggal,
-        item.waktu,
-        item.laporan,
-        item.solusi,
-        item.tindaklanjut ? "Sudah" : "Belum",
-        item.poin
-      ]),
-      startY: 20
+  const exportPDF = async () => {
+    const snapshot = await getDocs(collection(db, "laporanLingkungan"));
+    const data = snapshot.docs.map(doc => doc.data());
+    const docPDF = new jsPDF();
+    autoTable(docPDF, {
+      head: [["Nama", "Kelas", "Tanggal", "Lokasi", "Kategori", "Jenis", "Aksi", "Skor", "Saran"]],
+      body: data.map(item => [item.nama, item.kelas, item.tanggal, item.lokasi, item.kategori, item.jenis, item.aksi, item.skor, item.saran])
     });
-    doc.save("laporan_lingkungan.pdf");
+    docPDF.save("laporan.pdf");
   };
 
   return (
-    <MainLayout>
-      <div className="bg-white p-4 rounded shadow max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold mb-6 text-center text-green-700">Form Laporan Lingkungan</h2>
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { name: "nama", label: "Nama" },
-              { name: "kelas", label: "Kelas" },
-              { name: "lokasi", label: "Lokasi" },
-              { name: "hari", label: "Hari" },
-              { name: "tanggal", label: "Tanggal", type: "date" },
-              { name: "waktu", label: "Waktu", type: "time" },
-              { name: "laporan", label: "Laporan" },
-              { name: "solusi", label: "Solusi" }
-            ].map(({ name, label, type }) => (
-              <div key={name} className="flex flex-col">
-                <label htmlFor={name} className="text-sm font-medium text-gray-700 mb-1">{label}</label>
-                <input
-                  id={name}
-                  name={name}
-                  value={form[name]}
-                  onChange={handleChange}
-                  type={type || "text"}
-                  className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  required
-                />
-              </div>
+    <MainLayout user={user}>
+      <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-xl mx-auto bg-white shadow-lg rounded-xl">
+        <h2 className="text-2xl font-bold text-green-800 mb-6">Form Laporan Lingkungan</h2>
+
+        <input name="nama" placeholder="Nama" value={form.nama} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input name="kelas" placeholder="Kelas" value={form.kelas} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+
+        <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full border p-3 rounded-lg bg-green-50 text-green-900 font-medium focus:outline-none focus:ring-2 focus:ring-green-400" required>
+          <option value="">Pilih Kategori Masalah</option>
+          {Object.keys(kategoriMasalah).map((k) => (
+            <option key={k} value={k}>{k}</option>
+          ))}
+        </select>
+
+        {jenisOptions.length > 0 && (
+          <select name="jenis" value={form.jenis} onChange={handleChange} className="w-full border p-3 rounded-lg bg-yellow-50 text-yellow-900 font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
+            <option value="">Pilih Jenis Masalah</option>
+            {jenisOptions.map((j) => (
+              <option key={j} value={j}>{j}</option>
             ))}
-          </div>
-
-          <label className="flex items-center gap-2 mt-4">
-            <input type="checkbox" name="tindaklanjut" checked={form.tindaklanjut} onChange={handleChange} className="accent-green-600" />
-            Sudah ditindaklanjuti / diatasi? (+5 poin)
-          </label>
-
-          <button type="submit" className="mt-4 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition">Kirim Laporan</button>
-        </form>
-
-        {data.length > 0 && (
-          <>
-            <div className="flex flex-col md:flex-row gap-4 mt-6 justify-center">
-              <button onClick={exportExcel} className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Export Excel</button>
-              <button onClick={exportPDF} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Export PDF</button>
-            </div>
-
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-green-700 mb-4">Laporan Masuk:</h3>
-              <ul className="space-y-4">
-                {data.map((item, i) => (
-                  <li key={i} className="bg-green-50 border border-green-100 p-4 rounded-lg shadow-sm">
-                    <div className="mb-2">
-                      <p><strong>{item.nama} ({item.kelas})</strong> - <em>{item.lokasi}</em></p>
-                      <p><span className="font-semibold">Waktu:</span> {item.hari}, {item.tanggal} - {item.waktu}</p>
-                      <p><span className="font-semibold">Laporan:</span> {item.laporan}</p>
-                      <p><span className="font-semibold">Solusi:</span> {item.solusi}</p>
-                      {item.tindaklanjut && <p className="text-green-700 font-medium">✅ Sudah ditindaklanjuti (+5 poin)</p>}
-                      <p className="font-semibold">Poin: {item.poin}</p>
-                    </div>
-
-                    {item.penilaian ? (
-                      <div className="bg-green-100 p-3 rounded">
-                        <p><strong>Nilai:</strong> {item.totalNilai} / 20</p>
-                        <p><strong>Predikat:</strong> {item.predikat}</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 text-sm">
-                          {Object.entries(item.penilaian).map(([aspek, nilai]) => (
-                            <span key={aspek}><strong>{aspek}:</strong> {nilai}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      isAdmin && (
-                        <div className="bg-yellow-50 p-3 rounded mt-3">
-                          <p className="font-semibold mb-2">Beri Penilaian:</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                            {aspekPenilaian.map(aspek => (
-                              <input
-                                key={aspek}
-                                type="number"
-                                min="0"
-                                max="5"
-                                placeholder={aspek}
-                                className="border p-1 rounded"
-                                value={penilaian[item.id]?.[aspek] || ""}
-                                onChange={(e) => handlePenilaianChange(item.id, aspek, e.target.value)}
-                              />
-                            ))}
-                          </div>
-                          <button
-                            onClick={() => simpanPenilaian(item.id, item.docRef)}
-                            className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                          >
-                            Simpan Penilaian
-                          </button>
-                        </div>
-                      )
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
+          </select>
         )}
-      </div>
+
+        {form.jenis === "" && jenisOptions.includes("Lainnya") && (
+          <input name="customJenis" placeholder="Tulis jenis masalah" value={customJenis} onChange={(e) => setCustomJenis(e.target.value)} className="w-full border p-3 rounded-lg" required />
+        )}
+
+        {aksiOptions.length > 0 && (
+          <select name="aksi" value={form.aksi} onChange={handleChange} className="w-full border p-3 rounded-lg bg-blue-50 text-blue-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400" required>
+            <option value="">Pilih Aksi</option>
+            {aksiOptions.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+        )}
+
+        {form.aksi === "" && aksiOptions.includes("Lainnya") && (
+          <input name="customAksi" placeholder="Tulis aksi yang dilakukan" value={customAksi} onChange={(e) => setCustomAksi(e.target.value)} className="w-full border p-3 rounded-lg" required />
+        )}
+
+        {skorPoin !== null && (
+          <div className="text-sm text-green-800 font-semibold">Skor poin aksi ini: {skorPoin}</div>
+        )}
+
+        <input name="lokasi" placeholder="Lokasi Kejadian" value={form.lokasi} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <textarea name="saran" placeholder="Solusi atau saran tambahan (opsional)" value={form.saran} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+
+        <div className="flex flex-wrap gap-4 justify-center mt-6">
+          <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-lg shadow hover:bg-green-700 transition">Kirim</button>
+          <button type="button" onClick={exportExcel} className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition">Ekspor Excel</button>
+          <button type="button" onClick={exportPDF} className="bg-red-600 text-white px-6 py-2 rounded-lg shadow hover:bg-red-700 transition">Ekspor PDF</button>
+        </div>
+      </form>
     </MainLayout>
   );
 }

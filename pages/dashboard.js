@@ -20,6 +20,8 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [kelasFilter, setKelasFilter] = useState("");
   const [kategoriFilter, setKategoriFilter] = useState("");
+  const [showTop10, setShowTop10] = useState(false);
+  const [rekapPerKelas, setRekapPerKelas] = useState({});
 
   useEffect(() => {
     const login = JSON.parse(localStorage.getItem("loginUser"));
@@ -31,30 +33,18 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       const jejakSnap = await getDocs(collection(db, "jejakHijau"));
-      const budayaSnap = await getDocs(collection(db, "budayaHijau"));
+      const budayaSnap = await getDocs(collection(db, "budaya"));
       const laporanSnap = await getDocs(collection(db, "laporanLingkungan"));
-      const galeriSnap = await getDocs(collection(db, "galeriMedia"));
 
-      const jejak = jejakSnap.docs.map((doc) => doc.data());
-      const budaya = budayaSnap.docs.map((doc) => doc.data());
-      const laporan = laporanSnap.docs.map((doc) => doc.data());
-      const galeri = galeriSnap.docs.map((doc) => ({
-        nama: doc.data().nama,
-        kelas: doc.data().kelas,
-        tanggal: doc.data().tanggal,
-        kategori: "Galeri",
-        aksi: doc.data().deskripsi,
-        lokasi: "-",
-        poin: doc.data().poin || 5,
-      }));
+      const jejak = jejakSnap.docs.map((doc) => ({ ...doc.data(), kategori: "Jejak" }));
+      const budaya = budayaSnap.docs.map((doc) => ({ ...doc.data(), kategori: "Budaya" }));
+      const laporan = laporanSnap.docs.map((doc) => ({ ...doc.data(), kategori: "Laporan" }));
 
-      const semuaData = [...jejak, ...budaya, ...laporan, ...galeri].map((item) => ({
-        ...item,
-        kategori: item.kategori || "Laporan",
-      }));
+      const semuaData = [...jejak, ...budaya, ...laporan];
 
       const rekapMap = {};
       const detailMap = {};
+      const kelasMap = {};
 
       semuaData.forEach((item) => {
         const key = item.nama + "-" + item.kelas;
@@ -64,12 +54,43 @@ export default function Dashboard() {
             kelas: item.kelas,
             totalPoin: 0,
             jumlahAksi: 0,
+            kategoriPoin: {
+              Jejak: 0,
+              Budaya: 0,
+              Laporan: 0,
+            },
           };
           detailMap[key] = [];
         }
-        rekapMap[key].totalPoin += item.poin || 0;
+        const poin = item.poin || 0;
+        rekapMap[key].totalPoin += poin;
         rekapMap[key].jumlahAksi += 1;
+
+        if (item.kategori.includes("Jejak")) {
+          rekapMap[key].kategoriPoin.Jejak += poin;
+        } else if (item.kategori.includes("Budaya")) {
+          rekapMap[key].kategoriPoin.Budaya += poin;
+        } else {
+          rekapMap[key].kategoriPoin.Laporan += poin;
+        }
+
         detailMap[key].push(item);
+
+        if (!kelasMap[item.kelas]) {
+          kelasMap[item.kelas] = {
+            totalPoin: 0,
+            jumlahAksi: 0,
+            jumlahSiswa: 0,
+          };
+        }
+        kelasMap[item.kelas].totalPoin += poin;
+        kelasMap[item.kelas].jumlahAksi += 1;
+      });
+
+      Object.values(rekapMap).forEach((item) => {
+        if (kelasMap[item.kelas]) {
+          kelasMap[item.kelas].jumlahSiswa += 1;
+        }
       });
 
       const rekapArray = Object.values(rekapMap).sort(
@@ -77,8 +98,8 @@ export default function Dashboard() {
       );
       setRekap(rekapArray);
       setDetailData(detailMap);
+      setRekapPerKelas(kelasMap);
 
-      // 🔥 Simpan ke koleksi Firestore "rekapPoin"
       const saveRekapPromises = rekapArray.map((item) => {
         const docId = `${item.nama}-${item.kelas}`.replace(/\s+/g, "_");
         return setDoc(doc(db, "rekapPoin", docId), {
@@ -88,245 +109,184 @@ export default function Dashboard() {
       });
 
       await Promise.all(saveRekapPromises);
-      console.log("✅ Rekap berhasil disimpan ke Firestore.");
     };
 
     fetchData();
   }, []);
 
-  const toggleExpand = (key) => {
-    setExpanded(expanded === key ? null : key);
-  };
-
   const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      rekap.map((item) => ({
-        Nama: item.nama,
-        Kelas: item.kelas,
-        "Jumlah Aksi": item.jumlahAksi,
-        "Total Poin": item.totalPoin,
-      }))
-    );
+    const ws = XLSX.utils.json_to_sheet(rekap);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Rekap Poin Siswa");
-    XLSX.writeFile(wb, "rekap_poin_siswa.xlsx");
+    XLSX.utils.book_append_sheet(wb, ws, "Rekap");
+    XLSX.writeFile(wb, "rekap_poin.xlsx");
   };
 
   const exportPDF = () => {
     const docPDF = new jsPDF();
-    docPDF.text("Rekap Poin Semua Aksi Siswa", 14, 16);
     autoTable(docPDF, {
-      head: [["No", "Nama", "Kelas", "Jumlah Aksi", "Total Poin"]],
-      body: rekap.map((item, i) => [
-        i + 1,
+      head: [["Nama", "Kelas", "Total Poin", "Jejak", "Budaya", "Laporan"]],
+      body: rekap.map((item) => [
         item.nama,
         item.kelas,
-        item.jumlahAksi,
         item.totalPoin,
+        item.kategoriPoin.Jejak,
+        item.kategoriPoin.Budaya,
+        item.kategoriPoin.Laporan,
       ]),
-      startY: 20,
     });
-    docPDF.save("rekap_poin_siswa.pdf");
+    docPDF.save("rekap_poin.pdf");
+  };
+
+  const exportLaporanPerSiswa = () => {
+    const docPDF = new jsPDF();
+    Object.entries(detailData).forEach(([key, aksi], index) => {
+      const [nama, kelas] = key.split("-");
+      if (index > 0) docPDF.addPage();
+      docPDF.text(`Laporan Siswa: ${nama} (${kelas})`, 14, 14);
+      autoTable(docPDF, {
+        head: [["Kategori", "Judul", "Poin", "Tanggal"]],
+        body: aksi.map((item) => [
+          item.kategori,
+          item.judul || item.kegiatan || "",
+          item.poin || 0,
+          item.tanggal || "",
+        ]),
+      });
+    });
+    docPDF.save("laporan_per_siswa.pdf");
   };
 
   const filteredRekap = rekap.filter((item) => {
     const cocokNama = item.nama.toLowerCase().includes(search.toLowerCase());
     const cocokKelas = kelasFilter ? item.kelas === kelasFilter : true;
-    return cocokNama && cocokKelas;
+    const cocokKategori = kategoriFilter ? item.kategoriPoin[kategoriFilter] > 0 : true;
+    return cocokNama && cocokKelas && cocokKategori;
   });
+
+  const displayedRekap = showTop10 ? [...filteredRekap].sort((a, b) => b.totalPoin - a.totalPoin).slice(0, 10) : filteredRekap;
 
   return (
     <MainLayout>
-      <div className="bg-white bg-opacity-70 backdrop-blur p-4 rounded shadow font-inter max-w-full overflow-x-auto text-sm sm:text-base">
-        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-indigo-700">
-          Dashboard Rekap Semua Aksi Siswa
-        </h2>
-
-        {rekap.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-base sm:text-lg font-semibold text-yellow-600 mb-2">
-              🏆 Top 10 Siswa Berdasarkan Poin
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="min-w-[600px] w-full table-auto text-sm border bg-white shadow rounded">
-                <thead className="bg-yellow-100">
-                  <tr>
-                    <th className="px-3 py-2 border">#</th>
-                    <th className="px-3 py-2 border">Nama</th>
-                    <th className="px-3 py-2 border">Kelas</th>
-                    <th className="px-3 py-2 border text-center">Poin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rekap.slice(0, 10).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-yellow-50">
-                      <td className="px-3 py-2 border text-center font-semibold">
-                        {idx + 1}
-                      </td>
-                      <td className="px-3 py-2 border">{item.nama}</td>
-                      <td className="px-3 py-2 border">{item.kelas}</td>
-                      <td className="px-3 py-2 border text-center">
-                        {item.totalPoin}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      <div className="p-4">
+        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded">
+          <h2 className="font-semibold mb-2">Ringkasan Per Kelas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {Object.entries(rekapPerKelas).map(([kelas, data]) => (
+              <div key={kelas} className="p-2 bg-white border rounded shadow">
+                <p className="font-medium">{kelas}</p>
+                <p>Total Poin: {data.totalPoin}</p>
+                <p>Jumlah Aksi: {data.jumlahAksi}</p>
+                <p>Jumlah Siswa: {data.jumlahSiswa}</p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <div className="flex gap-4 mb-4 flex-wrap">
           <input
             type="text"
-            placeholder="🔍 Cari nama siswa..."
-            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
+            placeholder="Cari nama..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            className="border px-2 py-1 rounded"
           />
           <select
-            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
             value={kelasFilter}
             onChange={(e) => setKelasFilter(e.target.value)}
+            className="border px-2 py-1 rounded"
           >
-            <option value="">🎓 Semua Kelas</option>
-            {Array.from(new Set(rekap.map((r) => r.kelas))).map((kelas, i) => (
-              <option key={i} value={kelas}>
-                {kelas}
-              </option>
+            <option value="">Semua Kelas</option>
+            {[...new Set(rekap.map((r) => r.kelas))].map((kelas) => (
+              <option key={kelas} value={kelas}>{kelas}</option>
             ))}
           </select>
           <select
-            className="border px-3 py-2 rounded w-full text-sm sm:text-base"
             value={kategoriFilter}
             onChange={(e) => setKategoriFilter(e.target.value)}
+            className="border px-2 py-1 rounded"
           >
-            <option value="">🗂️ Semua Kategori</option>
+            <option value="">Semua Kategori</option>
             <option value="Jejak">Jejak</option>
             <option value="Budaya">Budaya</option>
             <option value="Laporan">Laporan</option>
-            <option value="Galeri">Galeri</option>
           </select>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-center items-center">
+          <button
+            onClick={() => setShowTop10(!showTop10)}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            {showTop10 ? "Tampilkan Semua" : "Tampilkan Top 10"}
+          </button>
           <button
             onClick={exportExcel}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 w-full sm:w-auto"
+            className="bg-green-600 text-white px-4 py-2 rounded"
           >
             Export Excel
           </button>
           <button
             onClick={exportPDF}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full sm:w-auto"
+            className="bg-red-600 text-white px-4 py-2 rounded"
           >
             Export PDF
+          </button>
+          <button
+            onClick={exportLaporanPerSiswa}
+            className="bg-purple-600 text-white px-4 py-2 rounded"
+          >
+            Laporan per Siswa (PDF)
           </button>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="min-w-[700px] w-full table-auto border text-sm shadow bg-white">
-            <thead className="bg-indigo-100 text-left">
-              <tr>
-                <th className="px-3 py-2 border"></th>
-                <th className="px-3 py-2 border">Nama</th>
-                <th className="px-3 py-2 border">Kelas</th>
-                <th className="px-3 py-2 border text-center">Jumlah Aksi</th>
-                <th className="px-3 py-2 border text-center">Total Poin</th>
+          <table className="w-full border border-collapse">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-2">#</th>
+                <th className="border p-2">Nama</th>
+                <th className="border p-2">Kelas</th>
+                <th className="border p-2">Total Poin</th>
+                <th className="border p-2">Jejak</th>
+                <th className="border p-2">Budaya</th>
+                <th className="border p-2">Laporan</th>
+                <th className="border p-2">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRekap.length > 0 ? (
-                filteredRekap.map((item) => {
-                  const key = item.nama + "-" + item.kelas;
-                  const detailAksi = detailData[key] || [];
-                  const filteredDetail = kategoriFilter
-                    ? detailAksi.filter(
-                        (a) => (a.kategori || "Laporan") === kategoriFilter
-                      )
-                    : detailAksi;
-
-                  return (
-                    <React.Fragment key={key}>
-                      <tr className="hover:bg-indigo-50">
-                        <td className="px-3 py-2 border text-center">
-                          <button
-                            onClick={() => toggleExpand(key)}
-                            className={`px-2 py-1 rounded-full text-xs font-semibold transition duration-200 ${
-                              expanded === key
-                                ? "bg-red-100 text-red-600 hover:bg-red-200"
-                                : "bg-green-100 text-green-700 hover:bg-green-200"
-                            }`}
-                          >
-                            {expanded === key ? "⬇️" : "▶️"}
-                          </button>
-                        </td>
-                        <td className="px-3 py-2 border">{item.nama}</td>
-                        <td className="px-3 py-2 border">{item.kelas}</td>
-                        <td className="px-3 py-2 border text-center">
-                          {item.jumlahAksi}
-                        </td>
-                        <td className="px-3 py-2 border text-center">
-                          {item.totalPoin}
-                        </td>
-                      </tr>
-                      {expanded === key && (
-                        <tr>
-                          <td colSpan="5" className="bg-gray-100">
-                            <div className="overflow-x-auto">
-                              <table className="w-full table-auto">
-                                <thead className="bg-gray-200">
-                                  <tr>
-                                    <th className="px-3 py-2 border">Tanggal</th>
-                                    <th className="px-3 py-2 border">Kategori</th>
-                                    <th className="px-3 py-2 border">Aksi</th>
-                                    <th className="px-3 py-2 border">Poin</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredDetail.length > 0 ? (
-                                    filteredDetail.map((detail, index) => (
-                                      <tr key={index}>
-                                        <td className="px-3 py-2 border">
-                                          {detail.tanggal}
-                                        </td>
-                                        <td className="px-3 py-2 border">
-                                          {detail.kategori}
-                                        </td>
-                                        <td className="px-3 py-2 border">
-                                          {detail.aksi}
-                                        </td>
-                                        <td className="px-3 py-2 border">
-                                          {detail.poin}
-                                        </td>
-                                      </tr>
-                                    ))
-                                  ) : (
-                                    <tr>
-                                      <td
-                                        colSpan="4"
-                                        className="px-3 py-2 text-center"
-                                      >
-                                        Tidak ada detail
-                                      </td>
-                                    </tr>
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-3 py-2 text-center">
-                    Tidak ada data yang cocok.
-                  </td>
-                </tr>
-              )}
+              {displayedRekap.map((item, index) => (
+                <React.Fragment key={item.nama + item.kelas}>
+                  <tr className="hover:bg-gray-100">
+                    <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">{item.nama}</td>
+                    <td className="border p-2">{item.kelas}</td>
+                    <td className="border p-2">{item.totalPoin}</td>
+                    <td className="border p-2">{item.kategoriPoin.Jejak}</td>
+                    <td className="border p-2">{item.kategoriPoin.Budaya}</td>
+                    <td className="border p-2">{item.kategoriPoin.Laporan}</td>
+                    <td className="border p-2">
+                      <button
+                        onClick={() => setExpanded(expanded === index ? null : index)}
+                        className="text-blue-500"
+                      >
+                        {expanded === index ? "Sembunyi" : "Detail"}
+                      </button>
+                    </td>
+                  </tr>
+                  {expanded === index && (
+                    <tr>
+                      <td colSpan="8" className="border p-2 bg-gray-50">
+                        <div className="overflow-x-auto">
+                          <ul className="list-disc pl-5">
+                            {detailData[item.nama + "-" + item.kelas]?.map((aksi, i) => (
+                              <li key={i} className="whitespace-nowrap">
+                                [{aksi.kategori}] {aksi.judul || aksi.kegiatan} — {aksi.poin} poin — {aksi.tanggal}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))}
             </tbody>
           </table>
         </div>

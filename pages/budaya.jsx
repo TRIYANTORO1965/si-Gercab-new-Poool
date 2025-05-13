@@ -12,9 +12,9 @@ export default function Budaya() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-yellow-50 py-6 px-4">
-        <div className="w-full max-w-xl mx-auto bg-white p-4 rounded-lg shadow">
-          <h2 className="text-xl font-bold text-green-700 mb-4">
+      <div className="min-h-screen bg-pink-50 py-10 px-4">
+        <div className="w-full max-w-4xl mx-auto bg-white p-6 rounded-2xl shadow-md">
+          <h2 className="text-2xl font-bold text-pink-700 mb-6 text-center">
             Form Budaya Sekolah
           </h2>
           <div className="overflow-x-auto">
