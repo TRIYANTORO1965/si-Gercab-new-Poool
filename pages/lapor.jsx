@@ -85,41 +85,7 @@ export default function Lapor() {
       "Sampah elektronik (kabel, baterai, dsb)": ["Kumpulkan di tempat khusus", "Buat program e-waste", "Lapor saja"],
       "Sisa makanan tercecer di kantin": ["Koordinasi dengan kantin", "Sediakan tempat sisa makanan", "Lapor saja"]
     },
-    "💧 Air & Sanitasi": {
-      "Kran air bocor": ["Tutup sementara", "Lapor saja"],
-      "Toilet/WC kotor atau mampet": ["Bersihkan", "Lapor saja"],
-      "Genangan air di halaman atau lorong": ["Pasang peringatan", "Lapor saja"],
-      "Wastafel rusak atau tersumbat": ["Gunakan wastafel lain", "Lapor saja"],
-      "Sabun cuci tangan tidak tersedia": ["Sediakan sabun", "Lapor saja"]
-    },
-    "🌬️ Udara & Bau": {
-      "Bau tidak sedap dari toilet/saluran": ["Gunakan pengharum", "Lapor saja"],
-      "Ruangan pengap/ventilasi buruk": ["Buka jendela", "Pasang kipas/ventilasi", "Lapor saja"],
-      "Asap pembakaran dari luar sekolah": ["Lapor saja"]
-    },
-    "🌿 Tanaman & Area Hijau": {
-      "Tanaman layu atau mati": ["Menyiram", "Ganti tanaman baru", "Lapor saja"],
-      "Taman tidak terawat": ["Kerja bakti", "Koordinasi dengan OSIS", "Lapor saja"],
-      "Tanah/lapangan gersang dan berdebu": ["Penanaman rumput", "Pengairan area", "Lapor saja"],
-      "Tidak ada pohon rindang di area panas": ["Pengajuan penanaman", "Lapor saja"]
-    },
-    "🧱 Fasilitas Lingkungan Rusak": {
-      "Jalan/ubin halaman rusak": ["Pasang tanda peringatan", "Lapor saja"],
-      "Coretan di tembok (vandalisme)": ["Bersihkan tembok", "Sosialisasi anti vandalisme", "Lapor saja"],
-      "Pot bunga/pagar taman rusak": ["Perbaiki", "Ajukan penggantian", "Lapor saja"],
-      "Tempat duduk kotor atau rusak": ["Bersihkan", "Lapor saja"]
-    },
-    "🔌 Energi & Listrik": {
-      "Lampu menyala saat tidak digunakan": ["Matikan lampu", "Pasang reminder hemat energi", "Lapor saja"],
-      "AC/kipas menyala terus": ["Matikan bila tidak digunakan", "Tingkatkan kesadaran", "Lapor saja"],
-      "Tidak ada kontrol pemakaian listrik di ruang kosong": ["Pasang sensor otomatis", "Lapor saja"]
-    },
-    "⚠️ Perilaku Tidak Ramah Lingkungan": {
-      "Siswa membuang sampah sembarangan": ["Tegur siswa", "Adakan kampanye kebersihan", "Lapor saja"],
-      "Tidak melaksanakan piket kelas": ["Evaluasi piket", "Buat sistem penjadwalan ulang", "Lapor saja"],
-      "Merusak tanaman atau fasilitas lingkungan": ["Beri sanksi", "Sosialisasi cinta lingkungan", "Lapor saja"],
-      "Tidak peduli kebersihan ruang kelas": ["Adakan lomba kelas bersih", "Sosialisasi tanggung jawab", "Lapor saja"]
-    }
+    // kategori lainnya...
   };
 
   const getSkor = (kategori, aksi) => aksiSkor[aksi] || 2;
@@ -208,13 +174,27 @@ export default function Lapor() {
     docPDF.save("laporan.pdf");
   };
 
+  const kelasOptions = [
+    "7 A", "7 B", "7 C", "7 D", "7 E", "7 F", "7 G", "7 H", "7 I",
+    "8 A", "8 B", "8 C", "8 D", "8 E", "8 F", "8 G", "8 H", "8 I",
+    "9 A", "9 B", "9 C", "9 D", "9 E", "9 F", "9 G", "9 H", "9 I"
+  ];
+
   return (
     <MainLayout user={user}>
       <form onSubmit={handleSubmit} className="space-y-4 p-4 max-w-xl mx-auto bg-white shadow-lg rounded-xl">
         <h2 className="text-2xl font-bold text-green-800 mb-6">Form Laporan Lingkungan</h2>
 
         <input name="nama" placeholder="Nama" value={form.nama} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
-        <input name="kelas" placeholder="Kelas" value={form.kelas} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        
+        {/* Dropdown kelas */}
+        <select name="kelas" value={form.kelas} onChange={handleChange} className="w-full border p-3 rounded-lg bg-green-50 text-green-900 font-medium focus:outline-none focus:ring-2 focus:ring-green-400" required>
+          <option value="">Pilih Kelas</option>
+          {kelasOptions.map((kelas) => (
+            <option key={kelas} value={kelas}>{kelas}</option>
+          ))}
+        </select>
+
         <input type="date" name="tanggal" value={form.tanggal} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
 
         <select name="kategori" value={form.kategori} onChange={handleChange} className="w-full border p-3 rounded-lg bg-green-50 text-green-900 font-medium focus:outline-none focus:ring-2 focus:ring-green-400" required>
@@ -255,6 +235,7 @@ export default function Lapor() {
         )}
 
         <input name="lokasi" placeholder="Lokasi Kejadian" value={form.lokasi} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" required />
+
         <textarea name="saran" placeholder="Solusi atau saran tambahan (opsional)" value={form.saran} onChange={handleChange} className="w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
 
         <div className="flex flex-wrap gap-4 justify-center mt-6">

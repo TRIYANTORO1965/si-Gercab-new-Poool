@@ -7,25 +7,26 @@ import autoTable from "jspdf-autotable";
 import "chart.js/auto";
 import { db } from "../lib/firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { FaChevronDown } from "react-icons/fa";
 import {
-  FaLeaf, FaBook, FaHandsHelping, FaBible, FaFlag,
+  FaChevronDown, FaLeaf, FaBook, FaHandsHelping, FaBible, FaFlag,
   FaMapMarkedAlt, FaLightbulb, FaUsers, FaGlobe, FaLaptop, FaUser,
-  FaChalkboardTeacher, FaFileExport, FaSave, FaExclamationTriangle
+  FaChalkboardTeacher, FaFileExport, FaSave, FaExclamationTriangle,
+  FaMapMarkerAlt, FaCalendarAlt
 } from "react-icons/fa";
 
 const kategoriIkon = {
-  "Budaya Religius": <FaBible className="inline-block mr-2 text-indigo-600" />, 
-  "Budaya Nasionalisme & Kebangsaan": <FaFlag className="inline-block mr-2 text-red-600" />, 
-  "Budaya Lokal/Tradisional": <FaMapMarkedAlt className="inline-block mr-2 text-orange-600" />, 
-  "Budaya Literasi": <FaBook className="inline-block mr-2 text-yellow-600" />, 
-  "Budaya Kedisiplinan": <FaLightbulb className="inline-block mr-2 text-blue-600" />, 
-  "Budaya Kebersamaan & Gotong Royong": <FaHandsHelping className="inline-block mr-2 text-green-600" />, 
-  "Budaya Ramah & Sopan Santun": <FaUsers className="inline-block mr-2 text-pink-600" />, 
-  "Budaya Kreativitas & Ekspresi Seni": <FaLeaf className="inline-block mr-2 text-purple-600" />, 
-  "Budaya Lingkungan (Hijau)": <FaGlobe className="inline-block mr-2 text-green-700" />, 
+  "Budaya Religius": <FaBible className="inline-block mr-2 text-indigo-600" />,
+  "Budaya Nasionalisme & Kebangsaan": <FaFlag className="inline-block mr-2 text-red-600" />,
+  "Budaya Lokal/Tradisional": <FaMapMarkedAlt className="inline-block mr-2 text-orange-600" />,
+  "Budaya Literasi": <FaBook className="inline-block mr-2 text-yellow-600" />,
+  "Budaya Kedisiplinan": <FaLightbulb className="inline-block mr-2 text-blue-600" />,
+  "Budaya Kebersamaan & Gotong Royong": <FaHandsHelping className="inline-block mr-2 text-green-600" />,
+  "Budaya Ramah & Sopan Santun": <FaUsers className="inline-block mr-2 text-pink-600" />,
+  "Budaya Kreativitas & Ekspresi Seni": <FaLeaf className="inline-block mr-2 text-purple-600" />,
+  "Budaya Lingkungan (Hijau)": <FaGlobe className="inline-block mr-2 text-green-700" />,
   "Budaya Digital Positif": <FaLaptop className="inline-block mr-2 text-gray-600" />,
 };
+
 
 const aksiBudaya = {
   "Budaya Religius": [
@@ -100,12 +101,23 @@ const aksiBudaya = {
   ]
 };
 
+const kelasOptions = [
+  ...Array.from({ length: 27 }, (_, i) => {
+    const tingkat = 7 + Math.floor(i / 9); // 7, 8, 9
+    const huruf = String.fromCharCode(65 + (i % 9)); // A - I
+    return `${tingkat} ${huruf}`;
+  }),
+];
+
 const FormBudaya = () => {
   const [kategori, setKategori] = useState("");
   const [aksi, setAksi] = useState("");
   const [poin, setPoin] = useState(null);
+  const [poinTerkirim, setPoinTerkirim] = useState(null);
   const [nama, setNama] = useState("");
   const [kelas, setKelas] = useState("");
+  const [lokasi, setLokasi] = useState("");
+  const [tanggal, setTanggal] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [dataBudaya, setDataBudaya] = useState([]);
@@ -137,7 +149,7 @@ const FormBudaya = () => {
   };
 
   const handleSubmit = async () => {
-    if (!nama || !kelas || !kategori || !aksi) {
+    if (!nama || !kelas || !kategori || !aksi || !lokasi || !tanggal) {
       setError("Harap lengkapi semua data sebelum mengirim.");
       return;
     }
@@ -148,17 +160,26 @@ const FormBudaya = () => {
         kategori,
         aksi,
         poin,
-        tanggal: new Date().toISOString(),
+        lokasi,
+        tanggal,
       });
+      alert("Data berhasil disimpan!");
       setSubmitted(true);
+      setPoinTerkirim(poin); // Simpan poin terkirim
+
+      setTimeout(() => {
+        setPoinTerkirim(null); // Hilangkan poin setelah 3 menit
+      }, 180000);
+
       setError("");
-      fetchData(); // refresh data setelah simpan
-      // reset form
+      fetchData();
       setNama("");
       setKelas("");
       setKategori("");
       setAksi("");
       setPoin(null);
+      setLokasi("");
+      setTanggal("");
     } catch (err) {
       setError("Gagal mengirim data. Silakan coba lagi.");
     }
@@ -178,7 +199,7 @@ const FormBudaya = () => {
     autoTable(doc, {
       head: [["Nama", "Kelas", "Kategori", "Aksi", "Poin", "Tanggal"]],
       body: dataBudaya.map(item => [
-        item.nama, item.kelas, item.kategori, item.aksi, item.poin, new Date(item.tanggal).toLocaleDateString()
+        item.nama, item.kelas, item.kategori, item.aksi, item.poin, item.tanggal
       ]),
     });
     doc.save("semua_data_budaya.pdf");
@@ -192,11 +213,24 @@ const FormBudaya = () => {
       </div>
       <div className="mb-4">
         <label className="block mb-1 font-medium"><FaChalkboardTeacher className="inline-block mr-2 text-green-500" />Kelas</label>
-        <input value={kelas} onChange={(e) => setKelas(e.target.value)} className="w-full p-2 border rounded-md bg-gray-50" />
+        <select value={kelas} onChange={(e) => setKelas(e.target.value)} className="w-full p-2 border rounded-md bg-gray-50">
+          <option value="">Pilih Kelas</option>
+          {kelasOptions.map((kls) => (
+            <option key={kls} value={kls}>{kls}</option>
+          ))}
+        </select>
+      </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medium"><FaMapMarkerAlt className="inline-block mr-2 text-amber-600" />Lokasi</label>
+        <input value={lokasi} onChange={(e) => setLokasi(e.target.value)} className="w-full p-2 border rounded-md bg-gray-50" />
+      </div>
+      <div className="mb-4">
+        <label className="block mb-1 font-medium"><FaCalendarAlt className="inline-block mr-2 text-lime-600" />Waktu</label>
+        <input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} className="w-full p-2 border rounded-md bg-gray-50" />
       </div>
 
       <label className="block mb-1 font-medium">Kategori Budaya</label>
-      <div className="relative mb-4">
+      <div className="relative mb-4 text-sm">
         <select
           value={kategori}
           onChange={handleKategoriChange}
@@ -219,7 +253,7 @@ const FormBudaya = () => {
       {kategori && (
         <>
           <label className="block mb-1 font-medium">Jenis Aksi Budaya</label>
-          <div className="relative mb-4">
+          <div className="relative mb-4 text-sm">
             <select
               value={aksi}
               onChange={handleAksiChange}
@@ -245,12 +279,12 @@ const FormBudaya = () => {
         onClick={handleSubmit}
         className="w-full bg-blue-600 text-white py-2 rounded-md flex items-center justify-center gap-2 hover:bg-blue-700"
       >
-        <FaSave /> Kirim / Simpan
+        <FaSave /> Kirim / nilai poin akan muncul setelah data terkirim
       </button>
 
-      {submitted && (
-        <div className="p-4 mt-4 bg-green-100 text-green-800 rounded-md shadow-inner">
-          Data berhasil disimpan!
+      {poinTerkirim !== null && (
+        <div className="p-4 mt-4 bg-green-100 text-green-800 rounded-md shadow-inner text-center text-sm">
+          Nilai Poin: <span className="font-semibold">{poinTerkirim}</span>  
         </div>
       )}
 
