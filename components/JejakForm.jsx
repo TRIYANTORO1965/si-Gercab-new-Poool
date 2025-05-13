@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 const aksiData = {
-  "📦 Pengelolaan Sampah": [
+  "Pengelolaan Sampah": [
     { aksi: "Pengumpulan sampah plastik dan daur ulang", poin: 5 },
     { aksi: "Penggunaan kantong belanja ramah lingkungan", poin: 4 },
     { aksi: "Penyuluhan tentang pemilahan sampah", poin: 6 },
@@ -28,7 +28,7 @@ const aksiData = {
     { aksi: "Pemisahan sampah organik dan anorganik di kelas", poin: 4 },
     { aksi: "Monitoring dan evaluasi pemilahan sampah harian", poin: 5 }
   ],
-  "🌱 Pelestarian Alam dan Tanaman": [
+  "Pelestarian Alam dan Tanaman": [
     { aksi: "Penanaman pohon atau tanaman hias di sekitar sekolah", poin: 6 },
     { aksi: "Pengelolaan kebun sekolah", poin: 7 },
     { aksi: "Program penghijauan sekolah dan lingkungan sekitar", poin: 8 },
@@ -39,7 +39,7 @@ const aksiData = {
     { aksi: "Lomba kelas hijau atau sudut tanaman", poin: 5 },
     { aksi: "Perawatan rutin taman sekolah", poin: 4 }
   ],
-  "💡 Penghematan Energi dan Air": [
+  "Penghematan Energi dan Air": [
     { aksi: "Kampanye penghematan penggunaan energi listrik", poin: 5 },
     { aksi: "Penggunaan alat hemat energi", poin: 4 },
     { aksi: "Penggunaan air secara bijak", poin: 5 },
@@ -49,7 +49,7 @@ const aksiData = {
     { aksi: "Audit energi oleh tim siswa", poin: 6 },
     { aksi: "Pelaporan penggunaan air/listrik bulanan", poin: 5 }
   ],
-  "📚 Pendidikan Lingkungan Hidup": [
+  "Pendidikan Lingkungan Hidup": [
     { aksi: "Mengadakan seminar atau diskusi tentang pelestarian lingkungan", poin: 6 },
     { aksi: "Membuat mading bertema lingkungan hidup", poin: 5 },
     { aksi: "Program literasi lingkungan", poin: 6 },
@@ -59,7 +59,7 @@ const aksiData = {
     { aksi: "Kunjungan edukatif ke lokasi konservasi", poin: 7 },
     { aksi: "Penyusunan buku saku pelestarian lingkungan", poin: 6 }
   ],
-  "🌿 Penggunaan Bahan Ramah Lingkungan": [
+  "Penggunaan Bahan Ramah Lingkungan": [
     { aksi: "Kampanye pengurangan plastik sekali pakai", poin: 5 },
     { aksi: "Penerapan daur ulang kertas di sekolah", poin: 4 },
     { aksi: "Penggunaan produk ramah lingkungan", poin: 5 },
@@ -67,7 +67,7 @@ const aksiData = {
     { aksi: "Penggunaan alat tulis daur ulang", poin: 4 },
     { aksi: "Kampanye bawa botol dan tempat makan sendiri", poin: 5 }
   ],
-  "💧 Pengelolaan Sumber Daya Alam": [
+  "Pengelolaan Sumber Daya Alam": [
     { aksi: "Pengelolaan air hujan untuk kebutuhan sekolah", poin: 6 },
     { aksi: "Penggunaan sumber daya alam terbarukan", poin: 6 },
     { aksi: "Edukasi energi terbarukan (tenaga surya)", poin: 7 },
@@ -75,7 +75,7 @@ const aksiData = {
     { aksi: "Pemasangan panel surya mini untuk edukasi", poin: 8 },
     { aksi: "Pembuatan biopori", poin: 6 }
   ],
-  "🧹 Kebersihan Lingkungan": [
+  "Kebersihan Lingkungan": [
     { aksi: "Gotong royong membersihkan lingkungan sekolah", poin: 5 },
     { aksi: "Pembuatan tempat sampah terpisah", poin: 4 },
     { aksi: "Aksi membersihkan sungai/saluran air", poin: 7 },
@@ -83,21 +83,21 @@ const aksiData = {
     { aksi: "Pembersihan area publik (jalan, taman)", poin: 6 },
     { aksi: "Penyediaan fasilitas cuci tangan di area sekolah", poin: 4 }
   ],
-  "🦋 Kampanye Keberagaman Hayati": [
+  "Kampanye Keberagaman Hayati": [
     { aksi: "Penyuluhan pentingnya keberagaman hayati", poin: 5 },
     { aksi: "Pengenalan flora dan fauna lokal", poin: 6 },
     { aksi: "Pembuatan taman kupu-kupu atau burung", poin: 7 },
     { aksi: "Dokumentasi dan katalog flora-fauna sekitar sekolah", poin: 6 },
     { aksi: "Lomba menggambar flora dan fauna lokal", poin: 4 }
   ],
-  "🌫️ Pengurangan Polusi Udara dan Suara": [
+  "Pengurangan Polusi Udara dan Suara": [
     { aksi: "Kampanye pengurangan kendaraan bermotor", poin: 5 },
     { aksi: "Edukasi dampak polusi udara", poin: 5 },
     { aksi: "Menanam tanaman penyerap polusi di pinggir jalan", poin: 6 },
     { aksi: "Pembuatan zona bebas asap rokok", poin: 5 },
     { aksi: "Kampanye diam saat jam pelajaran untuk kurangi kebisingan", poin: 4 }
   ],
-  "📣 Edukasi dan Kampanye Sosial": [
+  "Edukasi dan Kampanye Sosial": [
     { aksi: "Kampanye transportasi umum atau berjalan kaki", poin: 4 },
     { aksi: "Pembuatan poster/video kampanye lingkungan", poin: 5 },
     { aksi: "Podcast atau siaran sekolah bertema lingkungan", poin: 5 },
