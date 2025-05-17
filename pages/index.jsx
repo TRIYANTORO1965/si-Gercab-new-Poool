@@ -17,6 +17,23 @@ export default function Home() {
   const [budayaCount, setBudayaCount] = useState(0);
   const [laporCount, setLaporCount] = useState(0);
 
+  // Data foto aksi untuk slider
+  const aksiPhotos = [
+    { src: "/aksi1.jpg", alt: "Aksi menanam pohon" },
+    { src: "/aksi2.jpg", alt: "Kegiatan budaya tradisional" },
+    { src: "/aksi3.jpg", alt: "Laporan kebersihan lingkungan" },
+  ];
+
+  const [currentPhoto, setCurrentPhoto] = useState(0);
+
+  const prevSlide = () => {
+    setCurrentPhoto(currentPhoto === 0 ? aksiPhotos.length - 1 : currentPhoto - 1);
+  };
+
+  const nextSlide = () => {
+    setCurrentPhoto(currentPhoto === aksiPhotos.length - 1 ? 0 : currentPhoto + 1);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       if (typeof window !== "undefined") {
@@ -45,6 +62,14 @@ export default function Home() {
     fetchData();
   }, [router]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPhoto((prev) => (prev + 1) % aksiPhotos.length);
+    }, 5000); // Ganti foto setiap 5 detik
+
+    return () => clearInterval(interval);
+  }, [aksiPhotos.length]);
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -56,10 +81,11 @@ export default function Home() {
   return (
     <MainLayout>
       {/* Selamat Datang */}
-      <section className="text-center py-6 px-4">
-        <h1 className="text-3xl font-bold text-green-700">Selamat Datang</h1>
-        <p className="mt-2 text-gray-600 max-w-xl mx-auto">
-          Ini adalah beranda <strong>Si Gercab</strong> — Sistem Informasi Gerakan Cinta Budaya & Lingkungan. Silahkan pilih menu di atas untuk mengisi kegiatan
+      <section className="bg-green-100 px-6 py-4 rounded-xl shadow text-center mb-6">
+        <h1 className="text-2xl font-bold text-green-800 drop-shadow-sm mb-2">🌿 Selamat Datang 🎉</h1>
+        <p className="text-sm text-gray-700 max-w-3xl mx-auto">
+          Ini adalah beranda <strong className="text-red-600">Si Gercab</strong> — <em>Sistem Informasi Gerakan Cinta Alam & Budaya</em>.<br />
+          Silakan pilih menu di atas untuk melakukan aksi hebatmu hari ini!
         </p>
       </section>
 
@@ -82,8 +108,75 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Slider Foto Aksi */}
+      <section className="max-w-4xl mx-auto px-6 py-4 mb-8">
+        <h3
+          style={{
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            boxSizing: "border-box",
+          }}
+          className="text-lg font-semibold text-green-800 mb-4"
+        >
+          <div
+            style={{
+              display: "inline-block",
+              paddingLeft: "100%",
+              animation: "marquee 90s linear infinite",
+            }}
+          >
+            “Melangkah Hijau, Menghidupkan Budaya” -- “Alam Terjaga, Budaya Terpelihara” -- “Bersama Menjaga Bumi dan Warisan” -- “Cinta Alam, Cinta Budaya, Cinta Kita Semua” -- “Aksi Nyata untuk Bumi dan Tradisi” -- “Hijaukan Langkah, Hidupkan Budaya” -- “Dari Alam Kita Belajar, Dari Budaya Kita Tumbuh” -- “Langkah Kecil untuk Warisan Besar” -- “Kita Jaga Bumi, Kita Lestarikan Budaya” -- “Gerakan Cinta Alam dan Budaya, Warisan untuk Generasi” 
+          </div>
+        </h3>
+        <div className="relative">
+          <img
+            src={aksiPhotos[currentPhoto].src}
+            alt={aksiPhotos[currentPhoto].alt}
+            className="w-full h-64 object-cover rounded-lg shadow-md"
+          />
+
+          {/* Tombol navigasi */}
+          <button
+            onClick={prevSlide}
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-green-700 text-white rounded-full p-2 hover:bg-green-900"
+            aria-label="Previous Slide"
+          >
+            ‹
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-green-700 text-white rounded-full p-2 hover:bg-green-900"
+            aria-label="Next Slide"
+          >
+            ›
+          </button>
+        </div>
+
+        {/* Indicator dots */}
+        <div className="flex justify-center mt-3 space-x-2">
+          {aksiPhotos.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentPhoto(idx)}
+              className={`w-3 h-3 rounded-full ${
+                idx === currentPhoto ? "bg-green-700" : "bg-green-300"
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Style animasi marquee */}
+        <style>{`
+          @keyframes marquee {
+            0%   { transform: translateX(0%); }
+            100% { transform: translateX(-100%); }
+          }
+        `}</style>
+      </section>
+
       {/* Slogan & Visi */}
-      <section className="bg-white border-t px-6 py-6 text-center text-sm text-gray-600 space-y-2">
+      <section className="bg-white border-t px-6 py-4 text-center text-sm text-green-700 space-y-1">
         <p>"Anak Kayen, cinta bumi dan bangga tradisi!"</p>
         <p>"Dengan budaya di hati dan bumi di langkah, kita berjalan ke masa depan dengan harapan."</p>
         <p>"Jejak hijau dan jejak budaya: dua warisan mulia yang hidup di SMPN 2 Kayen."</p>
@@ -92,10 +185,10 @@ export default function Home() {
       </section>
 
       {/* Tentang Aplikasi */}
-      <section className="bg-blue-900 px-6 py-6 text-justify text-white max-w-3xl mx-auto leading-relaxed rounded-xl shadow">
-        <h2 className="text-xl font-semibold mb-2">Tentang Aplikasi Si Gercab</h2>
+      <section className="bg-blue-900 px-6 py-6 text-justify text-yellow-100 max-w-2xl mx-auto leading-relaxed rounded-xl shadow text-sm sm:text-base">
+        <h2 className="text-xl font-semibold mb-2 text-yellow-200">Tentang Aplikasi <span className="text-red-400">Si Gercab</span></h2>
         <p>
-          <strong>Si Gercab</strong> adalah platform digital yang dirancang untuk mendukung kegiatan cinta lingkungan dan budaya di lingkungan sekolah.
+          <strong className="text-red-400">Si Gercab</strong> adalah platform digital yang dirancang untuk mendukung kegiatan cinta lingkungan dan budaya di lingkungan sekolah.
           Aplikasi ini memudahkan siswa dan guru untuk melaporkan aksi lingkungan, mendokumentasikan kegiatan budaya, serta mengelola data dengan efisien.
         </p>
         <p className="mt-2">

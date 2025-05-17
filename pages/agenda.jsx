@@ -9,51 +9,8 @@ const seedAgenda = [
     tanggal: "2025-06-05",
     deskripsi: "Kegiatan menanam 100 bibit pohon di area sekolah dalam rangka Hari Lingkungan Hidup Sedunia."
   },
-  {
-    judul: "Aksi Bersih Sungai",
-    tanggal: "2025-06-10",
-    deskripsi: "Siswa dan warga membersihkan bantaran sungai dari sampah plastik dan limbah rumah tangga."
-  },
-  {
-    judul: "Kampanye Bebas Plastik",
-    tanggal: "2025-06-15",
-    deskripsi: "Edukasi kepada siswa dan guru untuk membawa botol minum sendiri dan mengurangi penggunaan plastik sekali pakai."
-  },
-  {
-    judul: "Workshop Daur Ulang",
-    tanggal: "2025-06-20",
-    deskripsi: "Pelatihan membuat kerajinan dari barang bekas seperti botol plastik, kardus, dan kertas."
-  },
-  {
-    judul: "Hari Tanpa Kendaraan",
-    tanggal: "2025-06-25",
-    deskripsi: "Mengajak siswa dan guru berangkat ke sekolah tanpa kendaraan bermotor untuk mengurangi emisi karbon."
-  },
-  {
-    judul: "Pentas Seni Daerah",
-    tanggal: "2025-07-01",
-    deskripsi: "Penampilan tari tradisional dan musik daerah oleh siswa kelas 7 dan 8."
-  },
-  {
-    judul: "Lomba Membatik",
-    tanggal: "2025-07-05",
-    deskripsi: "Kompetisi membatik tingkat sekolah dengan juri dari pengrajin lokal."
-  },
-  {
-    judul: "Festival Makanan Tradisional",
-    tanggal: "2025-07-10",
-    deskripsi: "Siswa membawa makanan khas daerah masing-masing dan mengenalkannya ke teman-teman."
-  },
-  {
-    judul: "Kelas Bahasa Daerah",
-    tanggal: "2025-07-15",
-    deskripsi: "Belajar kosakata dasar dan lagu anak-anak dalam bahasa Jawa, Sunda, dan lainnya."
-  },
-  {
-    judul: "Pameran Budaya Lokal",
-    tanggal: "2025-07-20",
-    deskripsi: "Pameran pakaian adat, alat musik tradisional, dan miniatur rumah adat oleh siswa."
-  }
+  
+  
 ];
 
 export default function Agenda() {
